@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 소상공인 데이터 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.24/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .toss-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        
+        .toss-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .toss-orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .toss-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 toss-blue rounded-lg flex items-center justify-center">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900">스마트 소상공인 대시보드</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="badge badge-success badge-sm">SEED+ 인증</div>
+                    <div class="avatar placeholder">
+                        <div class="bg-neutral text-neutral-content rounded-full w-8">
+                            <span class="text-xs">김사장</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <div class="bg-white rounded-2xl p-6 text-gray-900 shadow-lg border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">안녕하세요, 김사장님! 👋</h2>
+                        <p class="text-gray-600">오늘도 성공적인 하루 되세요. 최신 경영 데이터를 확인해보세요.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500">오늘</div>
+                        <div class="text-lg font-semibold" id="currentDate"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Key Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 월 매출액 -->
+            <div class="card bg-white shadow-lg card-hover metric-card">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">월 매출액</p>
+                            <p class="text-2xl font-bold text-gray-900">2,450만원</p>
+                            <div class="flex items-center mt-2">
+                                <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1"></i>
+                                <span class="text-sm text-green-600 font-medium">+12.5%</span>
+                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
+                            </div>
+                        </div>
+                        <div class="toss-blue rounded-full p-3">
+                            <i data-lucide="credit-card" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 원가율 -->
+            <div class="card bg-white shadow-lg card-hover metric-card">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">원가율</p>
+                            <p class="text-2xl font-bold text-gray-900">35.2%</p>
+                            <div class="flex items-center mt-2">
+                                <i data-lucide="trending-down" class="w-4 h-4 text-green-500 mr-1"></i>
+                                <span class="text-sm text-green-600 font-medium">-2.1%</span>
+                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
+                            </div>
+                        </div>
+                        <div class="toss-green rounded-full p-3">
+                            <i data-lucide="pie-chart" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 영업이익률 -->
+            <div class="card bg-white shadow-lg card-hover metric-card">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">영업이익률</p>
+                            <p class="text-2xl font-bold text-gray-900">18.7%</p>
+                            <div class="flex items-center mt-2">
+                                <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1"></i>
+                                <span class="text-sm text-green-600 font-medium">+3.2%</span>
+                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
+                            </div>
+                        </div>
+                        <div class="toss-orange rounded-full p-3">
+                            <i data-lucide="target" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 신용점수 -->
+            <div class="card bg-white shadow-lg card-hover metric-card">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">SEED+ 신용점수</p>
+                            <p class="text-2xl font-bold text-gray-900">94점</p>
+                            <div class="flex items-center mt-2">
+                                <div class="badge badge-success badge-sm">A+ 등급</div>
+                            </div>
+                        </div>
+                        <div class="toss-red rounded-full p-3">
+                            <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 매출 추이 차트 -->
+            <div class="card bg-white shadow-lg card-hover">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">매출 추이</h3>
+                        <div class="dropdown dropdown-end">
+                            <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+                                <span id="salesPeriod">최근 6개월</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
+                            </div>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32">
+                                <li><a onclick="updateSalesChart('3months')">최근 3개월</a></li>
+                                <li><a onclick="updateSalesChart('6months')">최근 6개월</a></li>
+                                <li><a onclick="updateSalesChart('1year')">최근 1년</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상권 분석 -->
+            <div class="card bg-white shadow-lg card-hover">
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">상권 분석</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">유동인구</p>
+                                    <p class="text-sm text-gray-500">일평균</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-gray-900">1,250명</p>
+                                <p class="text-sm text-green-600">+8.5%</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i data-lucide="store" class="w-5 h-5 text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">경쟁업체</p>
+                                    <p class="text-sm text-gray-500">반경 500m</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-gray-900">12개</p>
+                                <p class="text-sm text-orange-600">+1개</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <i data-lucide="home" class="w-5 h-5 text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">평균 임대료</p>
+                                    <p class="text-sm text-gray-500">3.3㎡당</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-gray-900">85만원</p>
+                                <p class="text-sm text-red-600">+3.2%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 분석 및 추천 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- AI 신용평가 시뮬레이션 -->
+            <div class="lg:col-span-2 card bg-white shadow-lg card-hover">
+                <div class="card-body p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">AI 신용평가 시뮬레이션</h3>
+                        <div class="badge badge-info badge-sm">AI 분석</div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i data-lucide="brain" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <p class="font-medium text-gray-900">현재 원가율을 35%에서 32%로 낮출 경우</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white rounded-lg p-3">
+                                <p class="text-sm text-gray-500">예상 신용점수</p>
+                                <p class="text-xl font-bold text-green-600">97점 (+3)</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-3">
+                                <p class="text-sm text-gray-500">예상 대출한도</p>
+                                <p class="text-xl font-bold text-blue-600">+500만원</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">원가율 조정</span>
+                            <span class="text-sm font-medium">35% → 32%</span>
+                        </div>
+                        <input type="range" min="25" max="45" value="35" class="range range-primary range-sm" id="costRatioSlider" oninput="updateSimulation(this.value)">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>25%</span>
+                            <span>35%</span>
+                            <span>45%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 알림 센터 -->
+            <div class="card bg-white shadow-lg card-hover">
+                <div class="card-body p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">알림 센터</h3>
+                    <div class="space-y-3">
+                        <div class="alert alert-success py-2 px-3">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span class="text-sm">매출이 목표 대비 12% 증가했어요!</span>
+                        </div>
+                        
+                        <div class="alert alert-warning py-2 px-3">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <span class="text-sm">재료비가 평소보다 높아요</span>
+                        </div>
+                        
+                        <div class="alert alert-info py-2 px-3">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span class="text-sm">RM 방문 예정: 2월 28일</span>
+                        </div>
+                        
+                        <div class="alert alert-error py-2 px-3">
+                            <i data-lucide="trending-down" class="w-4 h-4"></i>
+                            <span class="text-sm">주변 유동인구 5% 감소</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline btn-sm w-full mt-4">
+                        <i data-lucide="bell" class="w-4 h-4 mr-2"></i>
+                        모든 알림 보기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 부가 서비스 -->
+        <div class="card bg-white shadow-lg card-hover">
+            <div class="card-body p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-6">부가 서비스</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('compareModal')">
+                        <i data-lucide="bar-chart-2" class="w-8 h-8 text-blue-500"></i>
+                        <span class="text-sm font-medium">점포 비교 분석</span>
+                        <span class="text-xs text-gray-500">경쟁업체와 비교</span>
+                    </button>
+                    
+                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('trendModal')">
+                        <i data-lucide="trending-up" class="w-8 h-8 text-green-500"></i>
+                        <span class="text-sm font-medium">상권 트렌드</span>
+                        <span class="text-xs text-gray-500">지역 동향 분석</span>
+                    </button>
+                    
+                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('costModal')">
+                        <i data-lucide="calculator" class="w-8 h-8 text-orange-500"></i>
+                        <span class="text-sm font-medium">원가율 최적화</span>
+                        <span class="text-xs text-gray-500">비용 절감 도구</span>
+                    </button>
+                    
+                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('reportModal')">
+                        <i data-lucide="file-text" class="w-8 h-8 text-purple-500"></i>
+                        <span class="text-sm font-medium">정기 분석 리포트</span>
+                        <span class="text-xs text-gray-500">월간 성과 분석</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- 점포 비교 분석 Modal -->
+    <dialog id="compareModal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">점포 비교 분석</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h4 class="font-semibold">내 점포</h4>
+                        <div class="stats stats-vertical shadow">
+                            <div class="stat">
+                                <div class="stat-title">월 매출</div>
+                                <div class="stat-value text-primary">2,450만원</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">원가율</div>
+                                <div class="stat-value text-secondary">35.2%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h4 class="font-semibold">업종 평균</h4>
+                        <div class="stats stats-vertical shadow">
+                            <div class="stat">
+                                <div class="stat-title">월 매출</div>
+                                <div class="stat-value">2,180만원</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">원가율</div>
+                                <div class="stat-value">38.7%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 상권 트렌드 Modal -->
+    <dialog id="trendModal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">상권 트렌드 분석</h3>
+            <div class="h-64 bg-base-200 rounded-lg flex items-center justify-center">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 원가율 최적화 Modal -->
+    <dialog id="costModal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">원가율 최적화 도구</h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">재료비 (월)</span>
+                    </label>
+                    <input type="text" placeholder="예: 800만원" class="input input-bordered" />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">인건비 (월)</span>
+                    </label>
+                    <input type="text" placeholder="예: 450만원" class="input input-bordered" />
+                </div>
+                <div class="alert alert-info">
+                    <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                    <span>재료비를 10% 절약하면 원가율이 32.1%로 개선됩니다.</span>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 정기 분석 리포트 Modal -->
+    <dialog id="reportModal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">정기 분석 리포트</h3>
+            <div class="space-y-4">
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h4 class="font-semibold">2월 월간 리포트</h4>
+                        <p class="text-sm text-gray-600">매출 증가율, 원가 분석, 상권 동향을 포함한 종합 분석</p>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-primary btn-sm">다운로드</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h4 class="font-semibold">1분기 성과 리포트</h4>
+                        <p class="text-sm text-gray-600">분기별 성과 분석 및 다음 분기 전략 제안</p>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-outline btn-sm">예약</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Set current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        let salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: ['9월', '10월', '11월', '12월', '1월', '2월'],
+                datasets: [{
+                    label: '매출액 (만원)',
+                    data: [2100, 2250, 2180, 2320, 2180, 2450],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: '#f1f5f9'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update sales chart based on period
+        function updateSalesChart(period) {
+            const periodText = {
+                '3months': '최근 3개월',
+                '6months': '최근 6개월',
+                '1year': '최근 1년'
+            };
+            
+            document.getElementById('salesPeriod').textContent = periodText[period];
+            
+            let newData, newLabels;
+            
+            if (period === '3months') {
+                newLabels = ['12월', '1월', '2월'];
+                newData = [2320, 2180, 2450];
+            } else if (period === '1year') {
+                newLabels = ['3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월', '1월', '2월'];
+                newData = [1950, 2080, 2150, 2200, 2100, 2050, 2100, 2250, 2180, 2320, 2180, 2450];
+            } else {
+                newLabels = ['9월', '10월', '11월', '12월', '1월', '2월'];
+                newData = [2100, 2250, 2180, 2320, 2180, 2450];
+            }
+            
+            salesChart.data.labels = newLabels;
+            salesChart.data.datasets[0].data = newData;
+            salesChart.update();
+        }
+
+        // Update simulation
+        function updateSimulation(value) {
+            const currentScore = 94;
+            const improvement = Math.max(0, (35 - value) * 1.2);
+            const newScore = Math.min(100, currentScore + improvement);
+            const loanIncrease = improvement * 150;
+            
+            // Update display (you can add actual DOM updates here)
+            console.log(`New score: ${newScore.toFixed(0)}, Loan increase: ${loanIncrease.toFixed(0)}만원`);
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).showModal();
+            
+            // Initialize trend chart when modal opens
+            if (modalId === 'trendModal') {
+                setTimeout(() => {
+                    const trendCtx = document.getElementById('trendChart').getContext('2d');
+                    new Chart(trendCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['유동인구', '신규개업', '폐업', '임대료'],
+                            datasets: [{
+                                label: '변화율 (%)',
+                                data: [8.5, -2.1, 1.2, 3.2],
+                                backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            }
+        }
+
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate metric cards on load
+            const cards = document.querySelectorAll('.metric-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
