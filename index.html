@@ -1,633 +1,1527 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEED+ 스마트 소상공인 데이터 대시보드</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.24/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .toss-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        }
-        
-        .toss-green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        
-        .toss-orange {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-        
-        .toss-red {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-        
-        .animate-pulse-slow {
-            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEED+ MLS - 한국형 상업용 부동산 데이터 플랫폼</title>
+<style>
+  :root {
+    --primary: #3182f6;
+    --primary-light: #e8f3ff;
+    --primary-dark: #1b64da;
+    --red: #f04452;
+    --green: #05c072;
+    --bg: #f9fafb;
+    --white: #ffffff;
+    --border: #e5e8eb;
+    --text-primary: #191f28;
+    --text-secondary: #6b7684;
+    --text-tertiary: #b0b8c1;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 14px; }
+
+  /* ===== HEADER ===== */
+  .header {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: var(--white); border-bottom: 1px solid var(--border);
+    height: 56px; display:flex; align-items:center; padding: 0 24px;
+    gap: 32px;
+  }
+  .logo { 
+  display:flex;
+  align-items:center;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.logo-img {
+  height: 28px; /* Changed: 기존 90px에서 헤더(56px)에 맞게 28px로 축소 */
+  width: auto;
+  object-fit: contain; /* Changed: 이미지 비율을 유지하며 컨테이너에 맞춤 */
+}
+  .logo span { color: var(--text-primary); }
+  .nav { display:flex; gap:4px; flex:1; }
+  .nav-btn {
+    padding: 8px 14px; border:none; background:none; cursor:pointer;
+    font-size:14px; font-weight:500; color: var(--text-secondary);
+    border-radius: var(--radius-sm); transition: all 0.15s;
+    white-space:nowrap;
+  }
+  .nav-btn:hover { background: var(--bg); color: var(--text-primary); }
+  .nav-btn.active { color: var(--primary); font-weight:700; background: var(--primary-light); }
+  .header-right { display:flex; align-items:center; gap:12px; }
+  .search-box {
+    display:flex; align-items:center; gap:8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; width:200px;
+    font-size:13px; color: var(--text-tertiary);
+  }
+  .login-btn {
+    background: var(--primary); color: white; border:none;
+    padding: 8px 18px; border-radius: 20px; font-size:13px;
+    font-weight:600; cursor:pointer; transition: background 0.15s;
+  }
+  .login-btn:hover { background: var(--primary-dark); }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main { margin-top: 56px; min-height: calc(100vh - 56px); }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* ===== HOME PAGE ===== */
+  .home-layout { display:grid; grid-template-columns: 1fr 380px; gap:20px; padding:20px 24px; max-width:1400px; margin:0 auto; }
+  .home-left { display:flex; flex-direction:column; gap:16px; }
+  .home-right { display:flex; flex-direction:column; gap:16px; }
+
+  /* Market Ticker */
+  .market-ticker {
+    background: var(--white); border-radius: var(--radius); padding:14px 20px;
+    display:flex; gap:20px; align-items:center; overflow-x:auto;
+    border: 1px solid var(--border);
+  }
+  .ticker-item { display:flex; flex-direction:column; gap:2px; min-width:120px; }
+  .ticker-label { font-size:11px; color: var(--text-secondary); }
+  .ticker-value { font-size:15px; font-weight:700; }
+  .ticker-change { font-size:11px; }
+  .up { color: var(--red); }
+  .down { color: var(--primary); }
+  .ticker-divider { width:1px; height:36px; background: var(--border); flex-shrink:0; }
+
+  /* Card */
+  .card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); overflow:hidden;
+  }
+  .card-header {
+    padding: 16px 20px 12px; display:flex; align-items:center;
+    justify-content:space-between; border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size:15px; font-weight:700; }
+  .card-body { padding: 16px 20px; }
+  .card-link { font-size:12px; color: var(--primary); cursor:pointer; }
+
+  /* Calendar */
+  .calendar-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:4px; }
+  .cal-header { text-align:center; font-size:11px; color: var(--text-secondary); padding:4px 0; font-weight:600; }
+  .cal-day {
+    text-align:center; padding:6px 2px; border-radius:6px;
+    font-size:12px; cursor:pointer; transition: background 0.1s;
+    position:relative;
+  }
+  .cal-day:hover { background: var(--bg); }
+  .cal-day.today { background: var(--primary); color:white; font-weight:700; }
+  .cal-day.has-event::after {
+    content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background: var(--red);
+  }
+  .cal-day.today.has-event::after { background: white; }
+  .cal-day.other-month { color: var(--text-tertiary); }
+  .cal-nav { display:flex; align-items:center; gap:12px; }
+  .cal-nav button { background:none; border:none; cursor:pointer; color: var(--text-secondary); font-size:16px; padding:4px; }
+  .cal-month { font-size:14px; font-weight:700; }
+
+  /* Events */
+  .event-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .event-item {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 12px; background: var(--bg); border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary);
+  }
+  .event-item.urgent { border-left-color: var(--red); }
+  .event-item.warning { border-left-color: #ff9500; }
+  .event-dday {
+    font-size:11px; font-weight:800; padding:3px 8px;
+    border-radius:20px; white-space:nowrap;
+  }
+  .event-dday.today-badge { background: var(--red); color:white; }
+  .event-dday.soon { background: #fff3e0; color: #ff9500; }
+  .event-dday.normal { background: var(--primary-light); color: var(--primary); }
+  .event-info { flex:1; }
+  .event-title { font-size:13px; font-weight:600; }
+  .event-date { font-size:11px; color: var(--text-secondary); margin-top:2px; }
+
+  /* Industry Table */
+  .industry-table { width:100%; border-collapse:collapse; }
+  .industry-table th {
+    text-align:left; padding:8px 10px; font-size:11px;
+    color: var(--text-secondary); font-weight:600;
+    border-bottom: 1px solid var(--border); background: var(--bg);
+  }
+  .industry-table td { padding:10px 10px; font-size:13px; border-bottom: 1px solid var(--border); }
+  .industry-table tr:last-child td { border-bottom:none; }
+  .industry-table tr:hover td { background: var(--bg); }
+  .rank-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; font-size:11px; font-weight:700;
+  }
+  .rank-1 { background:#ffd700; color:#7a5c00; }
+  .rank-2 { background:#c0c0c0; color:#555; }
+  .rank-3 { background:#cd7f32; color:#fff; }
+  .rank-other { background: var(--bg); color: var(--text-secondary); }
+  .change-bar { display:flex; align-items:center; gap:6px; }
+  .mini-bar { height:6px; border-radius:3px; }
+
+  /* Stats Cards */
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-card {
+    background: var(--bg); border-radius: var(--radius-sm);
+    padding:12px 14px;
+  }
+  .stat-label { font-size:11px; color: var(--text-secondary); margin-bottom:4px; }
+  .stat-value { font-size:18px; font-weight:800; }
+  .stat-sub { font-size:11px; margin-top:2px; }
+
+  /* Chart placeholder */
+  .chart-area {
+    height:160px; background: linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%);
+    border-radius: var(--radius-sm); display:flex; align-items:center;
+    justify-content:center; position:relative; overflow:hidden;
+  }
+  .chart-svg { width:100%; height:100%; }
+
+  /* ===== FEED PAGE ===== */
+  .feed-layout { display:grid; grid-template-columns: 1fr 320px; gap:20px; padding:20px 24px; max-width:1400px; margin:0 auto; }
+  .feed-tabs { display:flex; gap:0; border-bottom: 2px solid var(--border); margin-bottom:16px; }
+  .feed-tab {
+    padding:10px 20px; font-size:14px; font-weight:500;
+    color: var(--text-secondary); cursor:pointer; border:none; background:none;
+    border-bottom: 2px solid transparent; margin-bottom:-2px; transition: all 0.15s;
+  }
+  .feed-tab.active { color: var(--primary); font-weight:700; border-bottom-color: var(--primary); }
+
+  /* News Sub Tabs */
+  .news-subtabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .news-subtab {
+    padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500;
+    cursor:pointer; border: 1px solid var(--border); background: var(--white);
+    color: var(--text-secondary); transition: all 0.15s;
+  }
+  .news-subtab.active { background: var(--primary); color:white; border-color: var(--primary); }
+
+  /* News Card */
+  .news-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); padding:16px 20px;
+    margin-bottom:12px; cursor:pointer; transition: box-shadow 0.15s;
+  }
+  .news-card:hover { box-shadow: var(--card-shadow); }
+  .news-category {
+    display:inline-block; padding:2px 8px; border-radius:4px;
+    font-size:11px; font-weight:600; margin-bottom:8px;
+  }
+  .cat-market { background:#e8f3ff; color: var(--primary); }
+  .cat-district { background:#e8fff3; color: var(--green); }
+  .cat-trade { background:#fff3e0; color:#ff9500; }
+  .cat-policy { background:#fce8ff; color:#9c27b0; }
+  .news-title { font-size:14px; font-weight:700; margin-bottom:6px; line-height:1.4; }
+  .news-summary { font-size:12px; color: var(--text-secondary); line-height:1.5; }
+  .news-meta { display:flex; gap:12px; margin-top:10px; font-size:11px; color: var(--text-tertiary); }
+
+  /* Community */
+  .comm-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); padding:16px 20px; margin-bottom:12px;
+  }
+  .comm-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .comm-avatar {
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:700; color:white;
+  }
+  .comm-user { font-size:13px; font-weight:600; }
+  .comm-region { font-size:11px; color: var(--text-secondary); }
+  .comm-content { font-size:13px; line-height:1.6; color: var(--text-primary); }
+  .comm-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .comm-tag {
+    padding:3px 8px; background: var(--bg); border-radius:4px;
+    font-size:11px; color: var(--text-secondary);
+  }
+  .comm-actions { display:flex; gap:16px; margin-top:12px; padding-top:10px; border-top: 1px solid var(--border); }
+  .comm-action {
+    display:flex; align-items:center; gap:4px; font-size:12px;
+    color: var(--text-secondary); cursor:pointer; transition: color 0.15s;
+    background:none; border:none;
+  }
+  .comm-action:hover { color: var(--primary); }
+  .comm-action.liked { color: var(--red); }
+
+  /* Sidebar widgets */
+  .widget { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom:16px; overflow:hidden; }
+  .widget-header { padding:14px 16px; border-bottom: 1px solid var(--border); font-size:14px; font-weight:700; }
+  .widget-body { padding:12px 16px; }
+  .follow-btn { padding:4px 10px; border-radius:12px; border: 1px solid var(--primary); color: var(--primary); font-size:11px; font-weight:600; cursor:pointer; background:none; }
+
+  /* ===== STORE BUILDER PAGE ===== */
+  .builder-layout { display:grid; grid-template-columns: 240px 1fr 320px; gap:0; min-height: calc(100vh - 56px); }
+  .builder-sidebar {
+    background: var(--white); border-right: 1px solid var(--border);
+    padding:16px 0; overflow-y:auto;
+  }
+  .sidebar-section { margin-bottom:8px; }
+  .sidebar-section-title { padding:8px 16px; font-size:11px; font-weight:700; color: var(--text-tertiary); text-transform:uppercase; letter-spacing:0.5px; }
+  .sidebar-item {
+    padding:10px 16px; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition: background 0.1s;
+    color: var(--text-secondary);
+  }
+  .sidebar-item:hover { background: var(--bg); color: var(--text-primary); }
+  .sidebar-item.active { background: var(--primary-light); color: var(--primary); font-weight:600; }
+  .sidebar-item .icon { font-size:16px; }
+  .sidebar-item .count { margin-left:auto; font-size:11px; background: var(--bg); padding:2px 6px; border-radius:10px; }
+
+  .builder-main { padding:20px; overflow-y:auto; background: var(--bg); }
+  .builder-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .builder-title { font-size:18px; font-weight:800; }
+  .builder-subtitle { font-size:13px; color: var(--text-secondary); margin-top:2px; }
+  .result-count { font-size:13px; color: var(--text-secondary); }
+
+  /* Filters */
+  .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+  .filter-chip {
+    display:flex; align-items:center; gap:4px;
+    padding:6px 12px; border-radius:20px; font-size:12px; font-weight:500;
+    border: 1px solid var(--border); background: var(--white); cursor:pointer;
+    color: var(--text-secondary); transition: all 0.15s; white-space:nowrap;
+  }
+  .filter-chip.active { background: var(--primary); color:white; border-color: var(--primary); }
+  .filter-chip .arrow { font-size:10px; }
+  .add-filter-btn {
+    padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;
+    border: 1px dashed var(--primary); background: var(--primary-light);
+    color: var(--primary); cursor:pointer;
+  }
+
+  /* Store Cards */
+  .store-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:14px; }
+  .store-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); overflow:hidden;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .store-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .store-card-header { padding:14px 16px 10px; border-bottom: 1px solid var(--border); }
+  .store-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+  .store-name { font-size:15px; font-weight:700; }
+  .store-score {
+    display:flex; align-items:center; gap:4px;
+    background: var(--primary-light); color: var(--primary);
+    padding:3px 8px; border-radius:6px; font-size:12px; font-weight:700;
+  }
+  .store-meta { display:flex; gap:8px; flex-wrap:wrap; }
+  .store-tag {
+    padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500;
+    background: var(--bg); color: var(--text-secondary);
+  }
+  .store-card-body { padding:12px 16px; }
+  .store-metrics { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; }
+  .metric-item { text-align:center; }
+  .metric-label { font-size:10px; color: var(--text-secondary); margin-bottom:2px; }
+  .metric-value { font-size:14px; font-weight:700; }
+  .store-card-footer {
+    padding:10px 16px; border-top: 1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .card-actions { display:flex; gap:12px; }
+  .card-action-btn {
+    display:flex; align-items:center; gap:4px; font-size:12px;
+    color: var(--text-secondary); cursor:pointer; background:none; border:none;
+    transition: color 0.15s;
+  }
+  .card-action-btn:hover { color: var(--primary); }
+  .card-action-btn.liked { color: var(--red); }
+  .repost-btn {
+    padding:5px 12px; border-radius:12px; font-size:12px; font-weight:600;
+    border: 1px solid var(--border); background: var(--white); cursor:pointer;
+    color: var(--text-secondary); transition: all 0.15s;
+  }
+  .repost-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* Expert / Ranking Panel */
+  .ranking-panel { background: var(--white); border-left: 1px solid var(--border); padding:16px; overflow-y:auto; }
+  .ranking-header { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .ranking-period { font-size:11px; color: var(--text-secondary); margin-bottom:14px; }
+  .ranking-item {
+    display:flex; align-items:center; gap:10px; padding:10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ranking-item:last-child { border-bottom:none; }
+  .ranking-num { font-size:14px; font-weight:800; width:24px; text-align:center; }
+  .ranking-info { flex:1; }
+  .ranking-name { font-size:13px; font-weight:600; }
+  .ranking-detail { font-size:11px; color: var(--text-secondary); margin-top:2px; }
+
+  /* Estimator Modal */
+  .estimator-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    z-index:200; align-items:center; justify-content:center;
+  }
+  .estimator-overlay.open { display:flex; }
+  .estimator-modal {
+    background: var(--white); border-radius: 16px; width:560px; max-height:80vh;
+    overflow-y:auto; padding:28px;
+  }
+  .modal-title { font-size:18px; font-weight:800; margin-bottom:4px; }
+  .modal-subtitle { font-size:13px; color: var(--text-secondary); margin-bottom:20px; }
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:13px; font-weight:600; margin-bottom:6px; display:block; }
+  .form-select, .form-input {
+    width:100%; padding:10px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size:13px; background: var(--white);
+    color: var(--text-primary); outline:none; transition: border-color 0.15s;
+  }
+  .form-select:focus, .form-input:focus { border-color: var(--primary); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .estimate-result {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius); padding:20px; color:white; margin-top:16px;
+  }
+  .estimate-result-title { font-size:13px; opacity:0.8; margin-bottom:8px; }
+  .estimate-result-value { font-size:28px; font-weight:800; margin-bottom:4px; }
+  .estimate-result-sub { font-size:12px; opacity:0.7; }
+  .estimate-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:14px; }
+  .estimate-item { background:rgba(255,255,255,0.15); border-radius:8px; padding:10px; text-align:center; }
+  .estimate-item-label { font-size:10px; opacity:0.7; margin-bottom:4px; }
+  .estimate-item-value { font-size:15px; font-weight:700; }
+  .calc-btn {
+    width:100%; padding:12px; background: var(--primary); color:white;
+    border:none; border-radius: var(--radius-sm); font-size:14px; font-weight:700;
+    cursor:pointer; margin-top:8px; transition: background 0.15s;
+  }
+  .calc-btn:hover { background: var(--primary-dark); }
+  .close-btn {
+    float:right; background:none; border:none; font-size:20px;
+    cursor:pointer; color: var(--text-secondary); margin-top:-4px;
+  }
+
+  /* ===== LOGIN PAGE ===== */
+  .login-page {
+    min-height: calc(100vh - 56px);
+    background: linear-gradient(160deg, #e8f3ff 0%, #f9fafb 50%, #ffffff 100%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-card {
+    background: var(--white); border-radius: 20px; padding:36px 40px;
+    width:420px; box-shadow: 0 8px 40px rgba(49,130,246,0.12);
+  }
+  .login-logo { font-size:20px; font-weight:800; color: var(--primary); margin-bottom:6px; }
+  .login-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+  .login-subtitle { font-size:13px; color: var(--text-secondary); margin-bottom:24px; }
+  .login-tabs { display:flex; gap:0; border-bottom: 2px solid var(--border); margin-bottom:20px; }
+  .login-tab {
+    flex:1; padding:10px; text-align:center; font-size:13px; font-weight:500;
+    color: var(--text-secondary); cursor:pointer; border:none; background:none;
+    border-bottom: 2px solid transparent; margin-bottom:-2px;
+  }
+  .login-tab.active { color: var(--primary); font-weight:700; border-bottom-color: var(--primary); }
+  .login-form { display:flex; flex-direction:column; gap:12px; }
+  .login-input {
+    padding:12px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size:14px; outline:none;
+    transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--primary); }
+  .login-input-row{
+  display:flex;
+  gap:10px;
+}
+
+.login-input-row .login-input{
+  flex:1;
+  width:100%;
+}
+  .agree-section { margin-top:4px; }
+  .agree-all { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom: 1px solid var(--border); margin-bottom:8px; cursor:pointer; }
+  .agree-item { display:flex; align-items:center; gap:8px; padding:6px 0; cursor:pointer; font-size:12px; color: var(--text-secondary); }
+  .agree-item .arrow { margin-left:auto; color: var(--text-tertiary); }
+  .checkbox { width:18px; height:18px; border-radius:4px; border: 2px solid var(--border); display:flex; align-items:center; justify-content:center; transition: all 0.15s; flex-shrink:0; }
+  .checkbox.checked { background: var(--primary); border-color: var(--primary); color:white; font-size:11px; }
+  .login-submit {
+    width:100%; padding:14px; background: var(--primary); color:white;
+    border:none; border-radius: var(--radius-sm); font-size:15px; font-weight:700;
+    cursor:pointer; margin-top:8px; transition: background 0.15s;
+  }
+  .login-submit:hover { background: var(--primary-dark); }
+  .login-links { display:flex; flex-direction:column; gap:8px; margin-top:16px; text-align:center; }
+  .login-link { font-size:13px; color: var(--primary); cursor:pointer; text-decoration:none; }
+  .login-link span { color: var(--text-secondary); }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .home-layout { grid-template-columns:1fr; }
+    .feed-layout { grid-template-columns:1fr; }
+    .builder-layout { grid-template-columns:1fr; }
+    .builder-sidebar { display:none; }
+    .ranking-panel { display:none; }
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .page.active { animation: fadeIn 0.2s ease; }
+
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-4">
-                    <div class="w-8 h-8 toss-blue rounded-lg flex items-center justify-center">
-                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h1 class="text-xl font-bold text-gray-900">SEED+ 스마트 소상공인 대시보드</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="badge badge-success badge-sm">SEED+ 인증</div>
-                    <div class="avatar placeholder">
-                        <div class="bg-neutral text-neutral-content rounded-full w-8">
-                            <span class="text-xs">김사장</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<body>
+
+<header class="header">
+
+  <div class="logo" onclick="showPage('home', document.querySelector('.nav-btn'))">
+    <img src="logo.png" alt="SEED+" class="logo-img">
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('home', this)">홈</button>
+    <button class="nav-btn" onclick="showPage('feed', this)">피드</button>
+    <button class="nav-btn" onclick="showPage('builder', this)">내 상가 만들어보기</button>
+    <button class="nav-btn" onclick="showPage('login', this)">점포주 로그인</button>
+  </nav>
+
+  <div class="header-right">
+    <div class="search-box">🔍 검색하세요</div>
+    <button class="login-btn"
+      onclick="showPage('login', document.querySelector('.nav-btn:last-child'))">
+      로그인
+    </button>
+  </div>
+
+</header>
+
+<div id="page-home" class="page main active">
+  <div style="padding:16px 24px 0; max-width:1400px; margin:0 auto;">
+    <div class="market-ticker">
+      <div class="ticker-item">
+        <span class="ticker-label">🏢 상업용 부동산 지수</span>
+        <span class="ticker-value">2,847.3</span>
+        <span class="ticker-change up">▲ 12.4 (+0.44%)</span>
+      </div>
+      <div class="ticker-divider"></div>
+      <div class="ticker-item">
+        <span class="ticker-label">📊 공실률 (서울 평균)</span>
+        <span class="ticker-value">8.2%</span>
+        <span class="ticker-change down">▼ 0.3%p</span>
+      </div>
+      <div class="ticker-divider"></div>
+      <div class="ticker-item">
+        <span class="ticker-label">💰 평균 임대료 (㎡)</span>
+        <span class="ticker-value">42,800원</span>
+        <span class="ticker-change up">▲ 1,200원</span>
+      </div>
+      <div class="ticker-divider"></div>
+      <div class="ticker-item">
+        <span class="ticker-label">📈 Cap Rate (평균)</span>
+        <span class="ticker-value">4.8%</span>
+        <span class="ticker-change up">▲ 0.1%p</span>
+      </div>
+      <div class="ticker-divider"></div>
+      <div class="ticker-item">
+        <span class="ticker-label">🏦 기준금리</span>
+        <span class="ticker-value">3.25%</span>
+        <span class="ticker-change" style="color:var(--text-secondary)">— 동결</span>
+      </div>
+      <div class="ticker-divider"></div>
+      <div class="ticker-item">
+        <span class="ticker-label">🔄 거래량 (이번달)</span>
+        <span class="ticker-value">1,284건</span>
+        <span class="ticker-change up">▲ 87건</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-layout">
+    <div class="home-left">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📊 업종별 매출 등락 순위</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">실시간 · 유동인구 · 매출 · 원가 통합 데이터</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select style="font-size:12px; border:1px solid var(--border); border-radius:6px; padding:4px 8px; background:var(--white);" onchange="updateIndustryData(this.value)">
+              <option value="all">전체 지역</option>
+              <option value="gangnam">강남구</option>
+              <option value="mapo">마포구</option>
+              <option value="seongdong">성동구</option>
+              <option value="jongno">종로구</option>
+            </select>
+            <span class="card-link">더보기 ›</span>
+          </div>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Welcome Section -->
-        <div class="mb-8">
-            <div class="bg-white rounded-2xl p-6 text-gray-900 shadow-lg border border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">안녕하세요, 김사장님! 👋</h2>
-                        <p class="text-gray-600">오늘도 성공적인 하루 되세요. 최신 경영 데이터를 확인해보세요.</p>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm text-gray-500">오늘</div>
-                        <div class="text-lg font-semibold" id="currentDate"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="card-body" style="padding:0;">
+          <table class="industry-table" id="industryTable">
+            <thead>
+              <tr>
+                <th style="width:40px;">순위</th>
+                <th>업종</th>
+                <th>평균 매출</th>
+                <th>등락률</th>
+                <th>유동인구</th>
+                <th>원가율</th>
+                <th>추이</th>
+              </tr>
+            </thead>
+            <tbody id="industryTableBody">
+            </tbody>
+          </table>
         </div>
+      </div>
 
-
-        <!-- Key Metrics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- 월 매출액 -->
-            <div class="card bg-white shadow-lg card-hover metric-card">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">월 매출액</p>
-                            <p class="text-2xl font-bold text-gray-900">2,450만원</p>
-                            <div class="flex items-center mt-2">
-                                <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1"></i>
-                                <span class="text-sm text-green-600 font-medium">+12.5%</span>
-                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
-                            </div>
-                        </div>
-                        <div class="toss-blue rounded-full p-3">
-                            <i data-lucide="credit-card" class="w-6 h-6 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 원가율 -->
-            <div class="card bg-white shadow-lg card-hover metric-card">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">원가율</p>
-                            <p class="text-2xl font-bold text-gray-900">35.2%</p>
-                            <div class="flex items-center mt-2">
-                                <i data-lucide="trending-down" class="w-4 h-4 text-green-500 mr-1"></i>
-                                <span class="text-sm text-green-600 font-medium">-2.1%</span>
-                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
-                            </div>
-                        </div>
-                        <div class="toss-green rounded-full p-3">
-                            <i data-lucide="pie-chart" class="w-6 h-6 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 영업이익률 -->
-            <div class="card bg-white shadow-lg card-hover metric-card">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">영업이익률</p>
-                            <p class="text-2xl font-bold text-gray-900">18.7%</p>
-                            <div class="flex items-center mt-2">
-                                <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1"></i>
-                                <span class="text-sm text-green-600 font-medium">+3.2%</span>
-                                <span class="text-xs text-gray-500 ml-1">전월 대비</span>
-                            </div>
-                        </div>
-                        <div class="toss-orange rounded-full p-3">
-                            <i data-lucide="target" class="w-6 h-6 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 신용점수 -->
-            <div class="card bg-white shadow-lg card-hover metric-card">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">SEED+ 신용점수</p>
-                            <p class="text-2xl font-bold text-gray-900">94점</p>
-                            <div class="flex items-center mt-2">
-                                <div class="badge badge-success badge-sm">A+ 등급</div>
-                            </div>
-                        </div>
-                        <div class="toss-red rounded-full p-3">
-                            <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 업종별 월별 매출 추이</div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="setChartPeriod('1m', this)" class="filter-chip active" style="padding:4px 10px; font-size:11px;">1개월</button>
+            <button onclick="setChartPeriod('3m', this)" class="filter-chip" style="padding:4px 10px; font-size:11px;">3개월</button>
+            <button onclick="setChartPeriod('6m', this)" class="filter-chip" style="padding:4px 10px; font-size:11px;">6개월</button>
+            <button onclick="setChartPeriod('1y', this)" class="filter-chip" style="padding:4px 10px; font-size:11px;">1년</button>
+          </div>
         </div>
-
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- 매출 추이 차트 -->
-            <div class="card bg-white shadow-lg card-hover">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">매출 추이</h3>
-                        <div class="dropdown dropdown-end">
-                            <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-                                <span id="salesPeriod">최근 6개월</span>
-                                <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
-                            </div>
-                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32">
-                                <li><a onclick="updateSalesChart('3months')">최근 3개월</a></li>
-                                <li><a onclick="updateSalesChart('6months')">최근 6개월</a></li>
-                                <li><a onclick="updateSalesChart('1year')">최근 1년</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="h-64">
-                        <canvas id="salesChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 상권 분석 -->
-            <div class="card bg-white shadow-lg card-hover">
-                <div class="card-body p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">상권 분석</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-900">유동인구</p>
-                                    <p class="text-sm text-gray-500">일평균</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-gray-900">1,250명</p>
-                                <p class="text-sm text-green-600">+8.5%</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <i data-lucide="store" class="w-5 h-5 text-green-600"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-900">경쟁업체</p>
-                                    <p class="text-sm text-gray-500">반경 500m</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-gray-900">12개</p>
-                                <p class="text-sm text-orange-600">+1개</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <i data-lucide="home" class="w-5 h-5 text-purple-600"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-900">평균 임대료</p>
-                                    <p class="text-sm text-gray-500">3.3㎡당</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-gray-900">85만원</p>
-                                <p class="text-sm text-red-600">+3.2%</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px;"><span style="width:12px; height:3px; background:#3182f6; display:inline-block; border-radius:2px;"></span>음식점</span>
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px;"><span style="width:12px; height:3px; background:#05c072; display:inline-block; border-radius:2px;"></span>카페</span>
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px;"><span style="width:12px; height:3px; background:#ff9500; display:inline-block; border-radius:2px;"></span>소매</span>
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px;"><span style="width:12px; height:3px; background:#f04452; display:inline-block; border-radius:2px;"></span>서비스</span>
+          </div>
+          <div class="chart-area">
+            <svg class="chart-svg" id="trendChart" viewBox="0 0 600 150" preserveAspectRatio="none"></svg>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:10px; color:var(--text-tertiary);" id="chartLabels"></div>
         </div>
+      </div>
 
-        <!-- AI 분석 및 추천 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <!-- AI 신용평가 시뮬레이션 -->
-            <div class="lg:col-span-2 card bg-white shadow-lg card-hover">
-                <div class="card-body p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">AI 신용평가 시뮬레이션</h3>
-                        <div class="badge badge-info badge-sm">AI 분석</div>
-                    </div>
-                    
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
-                        <div class="flex items-center space-x-3 mb-3">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                <i data-lucide="brain" class="w-4 h-4 text-white"></i>
-                            </div>
-                            <p class="font-medium text-gray-900">현재 원가율을 35%에서 32%로 낮출 경우</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white rounded-lg p-3">
-                                <p class="text-sm text-gray-500">예상 신용점수</p>
-                                <p class="text-xl font-bold text-green-600">97점 (+3)</p>
-                            </div>
-                            <div class="bg-white rounded-lg p-3">
-                                <p class="text-sm text-gray-500">예상 대출한도</p>
-                                <p class="text-xl font-bold text-blue-600">+500만원</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">원가율 조정</span>
-                            <span class="text-sm font-medium">35% → 32%</span>
-                        </div>
-                        <input type="range" min="25" max="45" value="35" class="range range-primary range-sm" id="costRatioSlider" oninput="updateSimulation(this.value)">
-                        <div class="flex justify-between text-xs text-gray-500">
-                            <span>25%</span>
-                            <span>35%</span>
-                            <span>45%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 알림 센터 -->
-            <div class="card bg-white shadow-lg card-hover">
-                <div class="card-body p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">알림 센터</h3>
-                    <div class="space-y-3">
-                        <div class="alert alert-success py-2 px-3">
-                            <i data-lucide="check-circle" class="w-4 h-4"></i>
-                            <span class="text-sm">매출이 목표 대비 12% 증가했어요!</span>
-                        </div>
-                        
-                        <div class="alert alert-warning py-2 px-3">
-                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                            <span class="text-sm">재료비가 평소보다 높아요</span>
-                        </div>
-                        
-                        <div class="alert alert-info py-2 px-3">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span class="text-sm">RM 방문 예정: 2월 28일</span>
-                        </div>
-                        
-                        <div class="alert alert-error py-2 px-3">
-                            <i data-lucide="trending-down" class="w-4 h-4"></i>
-                            <span class="text-sm">주변 유동인구 5% 감소</span>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-outline btn-sm w-full mt-4">
-                        <i data-lucide="bell" class="w-4 h-4 mr-2"></i>
-                        모든 알림 보기
-                    </button>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🗺️ 주요 상권 현황</div>
+          <span class="card-link">전체 보기 ›</span>
         </div>
-
-        <!-- 부가 서비스 -->
-        <div class="card bg-white shadow-lg card-hover">
-            <div class="card-body p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-6">부가 서비스</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('compareModal')">
-                        <i data-lucide="bar-chart-2" class="w-8 h-8 text-blue-500"></i>
-                        <span class="text-sm font-medium">점포 비교 분석</span>
-                        <span class="text-xs text-gray-500">경쟁업체와 비교</span>
-                    </button>
-                    
-                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('trendModal')">
-                        <i data-lucide="trending-up" class="w-8 h-8 text-green-500"></i>
-                        <span class="text-sm font-medium">상권 트렌드</span>
-                        <span class="text-xs text-gray-500">지역 동향 분석</span>
-                    </button>
-                    
-                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('costModal')">
-                        <i data-lucide="calculator" class="w-8 h-8 text-orange-500"></i>
-                        <span class="text-sm font-medium">원가율 최적화</span>
-                        <span class="text-xs text-gray-500">비용 절감 도구</span>
-                    </button>
-                    
-                    <button class="btn btn-outline btn-lg h-auto p-4 flex-col space-y-2 card-hover" onclick="openModal('reportModal')">
-                        <i data-lucide="file-text" class="w-8 h-8 text-purple-500"></i>
-                        <span class="text-sm font-medium">정기 분석 리포트</span>
-                        <span class="text-xs text-gray-500">월간 성과 분석</span>
-                    </button>
-                </div>
+        <div class="card-body">
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card" style="border-left:3px solid #3182f6;">
+              <div class="stat-label">강남 상권</div>
+              <div class="stat-value up">+2.4%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 ↑ 12만명/일</div>
             </div>
-        </div>
-    </main>
-
-    <!-- Modals -->
-    <!-- 점포 비교 분석 Modal -->
-    <dialog id="compareModal" class="modal">
-        <div class="modal-box w-11/12 max-w-4xl">
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <h3 class="font-bold text-lg mb-4">점포 비교 분석</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="card bg-base-200">
-                    <div class="card-body">
-                        <h4 class="font-semibold">내 점포</h4>
-                        <div class="stats stats-vertical shadow">
-                            <div class="stat">
-                                <div class="stat-title">월 매출</div>
-                                <div class="stat-value text-primary">2,450만원</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-title">원가율</div>
-                                <div class="stat-value text-secondary">35.2%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card bg-base-200">
-                    <div class="card-body">
-                        <h4 class="font-semibold">업종 평균</h4>
-                        <div class="stats stats-vertical shadow">
-                            <div class="stat">
-                                <div class="stat-title">월 매출</div>
-                                <div class="stat-value">2,180만원</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-title">원가율</div>
-                                <div class="stat-value">38.7%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-card" style="border-left:3px solid #05c072;">
+              <div class="stat-label">성수 상권</div>
+              <div class="stat-value up">+5.8%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 ↑ 8.2만명/일</div>
             </div>
-        </div>
-    </dialog>
-
-    <!-- 상권 트렌드 Modal -->
-    <dialog id="trendModal" class="modal">
-        <div class="modal-box w-11/12 max-w-4xl">
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <h3 class="font-bold text-lg mb-4">상권 트렌드 분석</h3>
-            <div class="h-64 bg-base-200 rounded-lg flex items-center justify-center">
-                <canvas id="trendChart"></canvas>
+            <div class="stat-card" style="border-left:3px solid #ff9500;">
+              <div class="stat-label">홍대 상권</div>
+              <div class="stat-value up">+1.2%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 → 15만명/일</div>
             </div>
-        </div>
-    </dialog>
-
-    <!-- 원가율 최적화 Modal -->
-    <dialog id="costModal" class="modal">
-        <div class="modal-box">
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <h3 class="font-bold text-lg mb-4">원가율 최적화 도구</h3>
-            <div class="space-y-4">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">재료비 (월)</span>
-                    </label>
-                    <input type="text" placeholder="예: 800만원" class="input input-bordered" />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">인건비 (월)</span>
-                    </label>
-                    <input type="text" placeholder="예: 450만원" class="input input-bordered" />
-                </div>
-                <div class="alert alert-info">
-                    <i data-lucide="lightbulb" class="w-4 h-4"></i>
-                    <span>재료비를 10% 절약하면 원가율이 32.1%로 개선됩니다.</span>
-                </div>
+            <div class="stat-card" style="border-left:3px solid #f04452;">
+              <div class="stat-label">명동 상권</div>
+              <div class="stat-value down">-0.8%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 ↓ 9.1만명/일</div>
             </div>
-        </div>
-    </dialog>
-
-    <!-- 정기 분석 리포트 Modal -->
-    <dialog id="reportModal" class="modal">
-        <div class="modal-box">
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <h3 class="font-bold text-lg mb-4">정기 분석 리포트</h3>
-            <div class="space-y-4">
-                <div class="card bg-base-200">
-                    <div class="card-body">
-                        <h4 class="font-semibold">2월 월간 리포트</h4>
-                        <p class="text-sm text-gray-600">매출 증가율, 원가 분석, 상권 동향을 포함한 종합 분석</p>
-                        <div class="card-actions justify-end">
-                            <button class="btn btn-primary btn-sm">다운로드</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card bg-base-200">
-                    <div class="card-body">
-                        <h4 class="font-semibold">1분기 성과 리포트</h4>
-                        <p class="text-sm text-gray-600">분기별 성과 분석 및 다음 분기 전략 제안</p>
-                        <div class="card-actions justify-end">
-                            <button class="btn btn-outline btn-sm">예약</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-card" style="border-left:3px solid #9c27b0;">
+              <div class="stat-label">이태원 상권</div>
+              <div class="stat-value up">+3.1%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 ↑ 6.4만명/일</div>
             </div>
+            <div class="stat-card" style="border-left:3px solid #00bcd4;">
+              <div class="stat-label">종로 상권</div>
+              <div class="stat-value down">-1.4%</div>
+              <div class="stat-sub" style="color:var(--text-secondary);">유동인구 ↓ 7.8만명/일</div>
+            </div>
+          </div>
         </div>
-    </dialog>
+      </div>
+    </div>
 
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+    <div class="home-right">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📅 부동산 이벤트 캘린더</div>
+          <div class="cal-nav">
+            <button onclick="changeMonth(-1)">‹</button>
+            <span class="cal-month" id="calMonth">2026년 2월</span>
+            <button onclick="changeMonth(1)">›</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="event-list" id="eventList"></div>
+        </div>
+      </div>
 
-        // Set current date
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ko-KR', {
-            month: 'long',
-            day: 'numeric'
-        });
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏆 Property Score 분포</div>
+          <span style="font-size:11px; color:var(--text-secondary);">서울 전체 기준</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                <span>Income Score (40%)</span><span class="up" style="font-weight:700;">72.4점</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:72.4%; background:var(--primary);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                <span>Risk Score (40%)</span><span style="font-weight:700; color:#ff9500;">68.1점</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:68.1%; background:#ff9500;"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                <span>Liquidity Score (20%)</span><span class="up" style="font-weight:700;">81.2점</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:81.2%; background:var(--green);"></div></div>
+            </div>
+            <div style="margin-top:8px; padding:12px; background:var(--primary-light); border-radius:var(--radius-sm); text-align:center;">
+              <div style="font-size:11px; color:var(--text-secondary);">종합 Property Score</div>
+              <div style="font-size:24px; font-weight:900; color:var(--primary);">72.8점</div>
+              <div style="font-size:11px; color:var(--text-secondary);">상위 28% · B+ 등급</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        // Sales Chart
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        let salesChart = new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: ['9월', '10월', '11월', '12월', '1월', '2월'],
-                datasets: [{
-                    label: '매출액 (만원)',
-                    data: [2100, 2250, 2180, 2320, 2180, 2450],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: {
-                            color: '#f1f5f9'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔄 최근 거래 현황</div>
+          <span class="card-link">더보기 ›</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div id="recentTrades"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // Update sales chart based on period
-        function updateSalesChart(period) {
-            const periodText = {
-                '3months': '최근 3개월',
-                '6months': '최근 6개월',
-                '1year': '최근 1년'
-            };
-            
-            document.getElementById('salesPeriod').textContent = periodText[period];
-            
-            let newData, newLabels;
-            
-            if (period === '3months') {
-                newLabels = ['12월', '1월', '2월'];
-                newData = [2320, 2180, 2450];
-            } else if (period === '1year') {
-                newLabels = ['3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월', '1월', '2월'];
-                newData = [1950, 2080, 2150, 2200, 2100, 2050, 2100, 2250, 2180, 2320, 2180, 2450];
-            } else {
-                newLabels = ['9월', '10월', '11월', '12월', '1월', '2월'];
-                newData = [2100, 2250, 2180, 2320, 2180, 2450];
-            }
-            
-            salesChart.data.labels = newLabels;
-            salesChart.data.datasets[0].data = newData;
-            salesChart.update();
-        }
+<div id="page-feed" class="page main">
+  <div class="feed-layout">
+    <div>
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="switchFeedTab('news', this)">📰 뉴스</button>
+        <button class="feed-tab" onclick="switchFeedTab('community', this)">💬 소통</button>
+      </div>
 
-        // Update simulation
-        function updateSimulation(value) {
-            const currentScore = 94;
-            const improvement = Math.max(0, (35 - value) * 1.2);
-            const newScore = Math.min(100, currentScore + improvement);
-            const loanIncrease = improvement * 150;
-            
-            // Update display (you can add actual DOM updates here)
-            console.log(`New score: ${newScore.toFixed(0)}, Loan increase: ${loanIncrease.toFixed(0)}만원`);
-        }
+      <div id="feed-news">
+        <div class="news-subtabs">
+          <button class="news-subtab active" onclick="filterNews('all', this)">전체</button>
+          <button class="news-subtab" onclick="filterNews('market', this)">📊 시장뉴스</button>
+          <button class="news-subtab" onclick="filterNews('district', this)">🏘️ 상권뉴스</button>
+          <button class="news-subtab" onclick="filterNews('trade', this)">🤝 거래뉴스</button>
+          <button class="news-subtab" onclick="filterNews('policy', this)">🏛️ 정책/금리</button>
+        </div>
+        <div id="newsContainer"></div>
+      </div>
 
-        // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).showModal();
-            
-            // Initialize trend chart when modal opens
-            if (modalId === 'trendModal') {
-                setTimeout(() => {
-                    const trendCtx = document.getElementById('trendChart').getContext('2d');
-                    new Chart(trendCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['유동인구', '신규개업', '폐업', '임대료'],
-                            datasets: [{
-                                label: '변화율 (%)',
-                                data: [8.5, -2.1, 1.2, 3.2],
-                                backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            }
-                        }
-                    });
-                }, 100);
-            }
-        }
+      <div id="feed-community" style="display:none;">
+        <div style="background:linear-gradient(135deg,#e8f3ff,#f0fff8); border-radius:var(--radius); padding:16px 20px; margin-bottom:16px; border:1px solid var(--border);">
+          <div style="font-size:15px; font-weight:700; margin-bottom:4px;">🤝 지역 소상공인 커뮤니티</div>
+          <div style="font-size:12px; color:var(--text-secondary);">같은 지역 점포주들과 원재료 공동구매, 정보 공유, 상권 활성화를 함께 만들어가세요</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+          <button class="news-subtab active" onclick="filterComm('all', this)">전체</button>
+          <button class="news-subtab" onclick="filterComm('purchase', this)">🛒 공동구매</button>
+          <button class="news-subtab" onclick="filterComm('info', this)">💡 정보공유</button>
+          <button class="news-subtab" onclick="filterComm('event', this)">🎉 상권이벤트</button>
+          <button class="news-subtab" onclick="filterComm('help', this)">🆘 도움요청</button>
+        </div>
+        <div id="commContainer"></div>
+        <div style="background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:16px; margin-top:8px;">
+            <textarea id="postInput" placeholder="우리 상권 이야기를 나눠보세요. 공동구매, 정보 공유, 이벤트 제안 등 무엇이든 환영합니다 🙌" style="width:100%; border:none; outline:none; font-size:13px; resize:none; height:80px; font-family:inherit; color:var(--text-primary);"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">
+              <div style="display:flex; gap:8px;">
+                <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="alert('이미지 첨부 창을 엽니다.')">📷</button>
+                <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="alert('파일 첨부 창을 엽니다.')">📎</button>
+                <button style="background:none; border:none; cursor:pointer; font-size:18px;" onclick="alert('태그 입력 창을 엽니다.')">🏷️</button>
+              </div>
+              <button onclick="submitPost()" style="background:var(--primary); color:white; border:none; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer;">게시하기</button>
+            </div>
+          </div>
+      </div>
+    </div>
 
-        // Add some interactive animations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animate metric cards on load
-            const cards = document.querySelectorAll('.metric-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'all 0.5s ease';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 50);
-                }, index * 100);
-            });
-        });
-    </script>
+    <div>
+      <div class="widget">
+        <div class="widget-header">📱 데이터 스토리 <span style="font-size:11px; color:var(--text-secondary); font-weight:400;">상권 숏츠</span></div>
+        <div class="widget-body" id="dataStorySpace" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;">
+          <div style="min-width: 110px; height: 160px; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8)), #3182f6; border-radius: 8px; position: relative; display:flex; align-items:flex-end; padding:10px; color:white; font-size:12px; font-weight:600; cursor:pointer;">
+            ▶️ 홍대 상권<br>요즘 뜨는 곳
+          </div>
+          <div style="min-width: 110px; height: 160px; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8)), #05c072; border-radius: 8px; position: relative; display:flex; align-items:flex-end; padding:10px; color:white; font-size:12px; font-weight:600; cursor:pointer;">
+            ▶️ 성수동 카페<br>매출 분석
+          </div>
+           <div style="min-width: 110px; height: 160px; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8)), #ff9500; border-radius: 8px; position: relative; display:flex; align-items:flex-end; padding:10px; color:white; font-size:12px; font-weight:600; cursor:pointer;">
+            ▶️ 강남역 1번출구<br>유동인구 분석
+          </div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-header">🛒 진행중인 공동구매</div>
+        <div class="widget-body">
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+              <div style="font-size:12px; font-weight:700; margin-bottom:4px;">강남구 식자재 공동구매</div>
+              <div style="font-size:11px; color:var(--text-secondary);">참여 12/20점포 · 마감 D-3</div>
+              <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:60%; background:var(--green);"></div></div>
+            </div>
+            <div style="padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+              <div style="font-size:12px; font-weight:700; margin-bottom:4px;">마포구 포장재 공동구매</div>
+              <div style="font-size:11px; color:var(--text-secondary);">참여 8/15점포 · 마감 D-7</div>
+              <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:53%; background:var(--primary);"></div></div>
+            </div>
+            <div style="padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+              <div style="font-size:12px; font-weight:700; margin-bottom:4px;">성수동 커피원두 공동구매</div>
+              <div style="font-size:11px; color:var(--text-secondary);">참여 18/20점포 · 마감 D-1</div>
+              <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:90%; background:var(--red);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="widget-header">🔔 상권 알림</div>
+        <div class="widget-body">
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+            <div style="padding:8px; background:#fff3e0; border-radius:6px; border-left:3px solid #ff9500;">
+              <div style="font-weight:600;">홍대 임대료 5% 인상 예고</div>
+              <div style="color:var(--text-secondary); margin-top:2px;">3월 계약 갱신 시 적용 예정</div>
+            </div>
+            <div style="padding:8px; background:#e8fff3; border-radius:6px; border-left:3px solid var(--green);">
+              <div style="font-weight:600;">성수동 유동인구 12% 증가</div>
+              <div style="color:var(--text-secondary); margin-top:2px;">팝업스토어 효과 · 주말 집중</div>
+            </div>
+            <div style="padding:8px; background:var(--primary-light); border-radius:6px; border-left:3px solid var(--primary);">
+              <div style="font-weight:600;">소상공인 지원금 신청 시작</div>
+              <div style="color:var(--text-secondary); margin-top:2px;">3월 1일 ~ 3월 31일 접수</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-builder" class="page main">
+  <div class="builder-layout">
+    <div class="builder-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">업종별</div>
+        <div class="sidebar-item active" onclick="filterByIndustry('all', this)"><span class="icon">🏪</span>전체 업종<span class="count">1,284</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('food', this)"><span class="icon">🍽️</span>음식점<span class="count">412</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('cafe', this)"><span class="icon">☕</span>카페/음료<span class="count">287</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('retail', this)"><span class="icon">🛍️</span>소매/판매<span class="count">198</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('beauty', this)"><span class="icon">💄</span>미용/뷰티<span class="count">156</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('health', this)"><span class="icon">💪</span>헬스/스포츠<span class="count">89</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('edu', this)"><span class="icon">📚</span>교육/학원<span class="count">74</span></div>
+        <div class="sidebar-item" onclick="filterByIndustry('service', this)"><span class="icon">🔧</span>생활서비스<span class="count">68</span></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">지역별</div>
+        <div class="sidebar-item" onclick="filterByRegion('gangnam', this)"><span class="icon">📍</span>강남구<span class="count">234</span></div>
+        <div class="sidebar-item" onclick="filterByRegion('mapo', this)"><span class="icon">📍</span>마포구<span class="count">187</span></div>
+        <div class="sidebar-item" onclick="filterByRegion('seongdong', this)"><span class="icon">📍</span>성동구<span class="count">143</span></div>
+        <div class="sidebar-item" onclick="filterByRegion('jongno', this)"><span class="icon">📍</span>종로구<span class="count">121</span></div>
+        <div class="sidebar-item" onclick="filterByRegion('yongsan', this)"><span class="icon">📍</span>용산구<span class="count">98</span></div>
+        <div class="sidebar-item" onclick="filterByRegion('songpa', this)"><span class="icon">📍</span>송파구<span class="count">89</span></div>
+      </div>
+      <div style="padding:12px 16px; margin-top:8px;">
+        <button onclick="openEstimator()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; cursor:pointer;">
+          🧮 수익률 추정 계산기
+        </button>
+        <button onclick="openSurvivalCalculator()" 
+style="width:100%; padding:10px; margin-top:8px; background:#05c072; color:white; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; cursor:pointer;">
+🧬 생존율 측정 계산기
+</button>
+      </div>
+    </div>
+
+    <div class="builder-main">
+      <div class="builder-header">
+        <div>
+          <div class="builder-title">내 상가 만들어보기</div>
+          <div class="builder-subtitle">업종·지역별 예상 매출과 수익률을 시뮬레이션해보세요</div>
+        </div>
+        <button onclick="openEstimator()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; cursor:pointer;">
+          + 내 상가 만들기
+        </button>
+      </div>
+
+      <div class="filter-bar">
+        <button class="add-filter-btn" onclick="addFilter()">+ 필터 추가</button>
+        <button class="filter-chip active" onclick="toggleFilter(this, '전체')">전체 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '지역')">지역 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '면적')">면적 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '예상매출')">예상매출 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '수익률')">수익률 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '권리금')">권리금 ▾</button>
+        <button class="filter-chip" onclick="toggleFilter(this, '임대료')">임대료 ▾</button>
+        <span class="result-count" id="resultCount">총 1,284개</span>
+      </div>
+
+      <div class="store-grid" id="storeGrid"></div>
+    </div>
+
+    <div class="ranking-panel">
+      <div class="ranking-header">👨‍⚖️ 전문가 매칭</div>
+      <div class="ranking-period">회계사 · 세무사 · 변호사 · 중개사</div>
+      <div id="expertList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-login" class="page main">
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">SEED+ MLS</div>
+      <div class="login-title">점포주 로그인</div>
+      <div class="login-subtitle">내 점포 데이터를 관리하고 스마트하게 운영하세요</div>
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="switchLoginTab('phone', this)">휴대폰 번호로 로그인</button>
+        <button class="login-tab" onclick="switchLoginTab('qr', this)">QR코드로 로그인</button>
+      </div>
+     <div id="loginPhoneForm" class="login-form">
+  <div class="login-input-row">
+    <input id="ownerName" class="login-input" type="text" placeholder="이름">
+    <input id="ownerBirth" class="login-input" type="text" placeholder="생년월일 6자리">
+  </div>
+  <input id="ownerPhone" class="login-input" type="tel" placeholder="휴대폰 번호">
+        <div class="agree-section">
+          <div class="agree-all" onclick="toggleAgreeAll()">
+            <div class="checkbox" id="agreeAllBox">✓</div>
+            <span style="font-size:13px; font-weight:600;">필수 약관에 모두 동의</span>
+          </div>
+          <div class="agree-item">
+            <div class="checkbox checked">✓</div>
+            <span>개인정보 수집·이용 동의 (점포주 인증)</span>
+            <span class="arrow">›</span>
+          </div>
+          <div class="agree-item">
+            <div class="checkbox checked">✓</div>
+            <span>개인정보 제3자 제공 동의 (데이터 분석)</span>
+            <span class="arrow">›</span>
+          </div>
+        </div>
+        <button class="login-submit" onclick="doLogin()">로그인</button>
+      </div>
+      <div id="loginQRForm" style="display:none; text-align:center; padding:20px 0;">
+        <div style="width:160px; height:160px; background:var(--bg); border-radius:12px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-size:48px; border:2px dashed var(--border);">📱</div>
+        <div style="font-size:13px; color:var(--text-secondary);">상가MLS 앱에서 QR코드를 스캔하세요</div>
+      </div>
+      <div class="login-links">
+        <a class="login-link">앱 없이 로그인하기</a>
+        <a class="login-link"><span>아직 회원이 아닌가요? </span>가입하기</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="estimator-overlay" id="estimatorOverlay" onclick="closeEstimatorOutside(event)">
+  <div class="estimator-modal">
+    <button class="close-btn" onclick="closeEstimator()">✕</button>
+    <div class="modal-title">🧮 내 상가 수익률 추정</div>
+    <div class="modal-subtitle">업종과 지역을 선택하면 예상 매출과 수익률을 계산해드립니다</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">상가명</label>
+        <input class="form-input" type="text" id="estStoreName" placeholder="예) 성수 스페셜티 카페">
+      </div>
+      <div class="form-group">
+        <label class="form-label">예상 직원 수 (명)</label>
+        <input class="form-input" type="number" id="estStaff" value="2" min="0" max="50">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">업종 선택</label>
+        <select class="form-select" id="estIndustry">
+          <option value="food">음식점</option>
+          <option value="cafe">카페/음료</option>
+          <option value="retail">소매/판매</option>
+          <option value="beauty">미용/뷰티</option>
+          <option value="health">헬스/스포츠</option>
+          <option value="edu">교육/학원</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">지역 선택</label>
+        <select class="form-select" id="estRegion">
+          <option value="gangnam">강남구</option>
+          <option value="mapo">마포구 (홍대)</option>
+          <option value="seongdong">성동구 (성수)</option>
+          <option value="jongno">종로구</option>
+          <option value="yongsan">용산구 (이태원)</option>
+          <option value="songpa">송파구</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">면적 (㎡)</label>
+        <input class="form-input" type="number" id="estArea" value="50" min="10" max="500">
+      </div>
+      <div class="form-group">
+        <label class="form-label">초기 투자금 (만원)</label>
+        <input class="form-input" type="number" id="estInvest" value="5000" min="1000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">월 임대료 (만원)</label>
+        <input class="form-input" type="number" id="estRent" value="300" min="50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">권리금 (만원)</label>
+        <input class="form-input" type="number" id="estPremium" value="3000" min="0">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calculateEstimate()">📊 수익률 계산하기</button>
+    <div id="estimateResult" style="display:none;">
+      <div class="estimate-result">
+        <div class="estimate-result-title">예상 월 매출</div>
+        <div class="estimate-result-value" id="estRevenue">-</div>
+        <div class="estimate-result-sub" id="estRevenueNote">-</div>
+        <div class="estimate-grid">
+          <div class="estimate-item">
+            <div class="estimate-item-label">예상 순이익률</div>
+            <div class="estimate-item-value" id="estProfitRate">-</div>
+          </div>
+          <div class="estimate-item">
+            <div class="estimate-item-label">투자 회수 기간</div>
+            <div class="estimate-item-value" id="estPayback">-</div>
+          </div>
+          <div class="estimate-item">
+            <div class="estimate-item-label">Property Score</div>
+            <div class="estimate-item-value" id="estScore">-</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px; padding:12px; background:var(--bg); border-radius:var(--radius-sm); font-size:12px; color:var(--text-secondary); line-height:1.6;">
+        ⚠️ 본 추정치는 서울시 상권 데이터, 카드 매출 데이터, 국토교통부 실거래가를 기반으로 산출된 참고용 수치입니다. 실제 수익은 운영 역량, 시장 상황에 따라 달라질 수 있습니다.
+      </div>
+      <button onclick="saveToBuilder()" style="width:100%; padding:10px; background:var(--green); color:white; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; cursor:pointer; margin-top:8px;">
+        💾 내 상가 목록에 저장하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const industryData = [
+  { rank:1, name:'카페/음료', avg:'3,240만원', change:'+8.4%', pop:'12.4만', cost:'28.2%', trend:[60,65,70,68,75,80,78,85], color:'#05c072' },
+  { rank:2, name:'음식점', avg:'4,820만원', change:'+5.2%', pop:'18.7만', cost:'34.1%', trend:[70,72,68,75,80,78,82,85], color:'#3182f6' },
+  { rank:3, name:'미용/뷰티', avg:'2,180만원', change:'+3.8%', pop:'8.2만', cost:'22.4%', trend:[55,58,60,62,65,68,70,72], color:'#9c27b0' },
+  { rank:4, name:'헬스/스포츠', avg:'3,560만원', change:'+2.1%', pop:'6.8만', cost:'18.7%', trend:[65,67,70,68,72,74,73,76], color:'#ff9500' },
+  { rank:5, name:'소매/판매', avg:'2,940만원', change:'-1.2%', pop:'15.3만', cost:'42.8%', trend:[80,78,75,72,70,68,65,63], color:'#f04452' },
+  { rank:6, name:'교육/학원', avg:'2,650만원', change:'-0.8%', pop:'4.1만', cost:'15.2%', trend:[70,68,65,67,64,62,60,61], color:'#607d8b' },
+  { rank:7, name:'생활서비스', avg:'1,820만원', change:'-2.4%', pop:'9.6만', cost:'25.6%', trend:[60,58,55,52,50,48,46,44], color:'#795548' },
+];
+
+const events = [
+  { date: new Date(2026,1,28), title:'한국은행 기준금리 결정', type:'urgent', dday:0 },
+  { date: new Date(2026,2,5), title:'서울시 상권 활성화 지원금 신청', type:'warning', dday:5 },
+  { date: new Date(2026,2,10), title:'상업용 부동산 실거래가 공시', type:'normal', dday:10 },
+  { date: new Date(2026,2,15), title:'소상공인 정책자금 설명회', type:'normal', dday:15 },
+  { date: new Date(2026,2,20), title:'강남구 상권 분석 리포트 발간', type:'normal', dday:20 },
+  { date: new Date(2026,2,31), title:'1분기 임대료 동향 발표', type:'normal', dday:31 },
+];
+
+const newsData = [
+  { cat:'market', catLabel:'시장뉴스', title:'서울 상업용 부동산 공실률 8.2%로 하락…2년 만에 최저', summary:'서울 주요 상권의 공실률이 8.2%로 떨어지며 2024년 이후 최저치를 기록했다. 강남·성수 상권을 중심으로 임차 수요가 회복되고 있다.', time:'2시간 전', views:'2,847' },
+  { cat:'policy', catLabel:'정책/금리', title:'한국은행, 기준금리 3.25% 동결…상반기 인하 가능성 시사', summary:'한국은행 금융통화위원회가 기준금리를 3.25%로 동결했다. 위원들은 하반기 경기 회복세에 따라 금리 인하를 검토할 수 있다고 밝혔다.', time:'4시간 전', views:'5,124' },
+  { cat:'district', catLabel:'상권뉴스', title:'성수동 팝업스토어 효과…유동인구 전년 대비 34% 급증', summary:'성수동 상권의 유동인구가 팝업스토어 집중 효과로 전년 동기 대비 34% 증가했다. 카페·음식점 매출도 동반 상승 중이다.', time:'6시간 전', views:'3,291' },
+  { cat:'trade', catLabel:'거래뉴스', title:'강남 꼬마빌딩 거래량 전월 대비 23% 증가…투자 수요 회복', summary:'강남구 꼬마빌딩(연면적 1,000㎡ 이하) 거래량이 전월 대비 23% 증가했다. Cap Rate 4.5~5.0% 수준에서 거래가 활발히 이루어지고 있다.', time:'8시간 전', views:'1,876' },
+  { cat:'market', catLabel:'시장뉴스', title:'홍대 상권 임대료 5% 인상 예고…점포주 대응 전략은?', summary:'마포구 홍대 상권 일대 건물주들이 3월 계약 갱신 시 임대료 5% 인상을 통보하고 신규 세입자를 모색하고 있다.', time:'10시간 전', views:'4,512' },
+  { cat:'policy', catLabel:'정책/금리', title:'소상공인 정책자금 금리 0.5%p 인하…3월부터 적용', summary:'중소벤처기업부가 소상공인 정책자금 금리를 0.5%p 인하한다고 발표했다. 3월 1일부터 신규 대출 및 갱신 대출에 적용된다.', time:'1일 전', views:'6,834' },
+  { cat:'district', catLabel:'상권뉴스', title:'명동 상권 외국인 관광객 회복…매출 전년 대비 18% 상승', summary:'명동 상권의 외국인 관광객이 코로나 이전 수준의 85%까지 회복되며 매출이 전년 대비 18% 상승했다.', time:'1일 전', views:'2,103' },
+  { cat:'trade', catLabel:'거래뉴스', title:'이태원 상가 권리금 시장 회복세…평균 4,200만원 기록', summary:'이태원 상권의 권리금이 평균 4,200만원으로 회복세를 보이고 있다. 2024년 저점 대비 31% 상승한 수치다.', time:'2일 전', views:'1,547' },
+];
+
+const commData = [
+  { type:'purchase', user:'홍대 파스타 A', region:'마포구 서교동', color:'#3182f6', content:'안녕하세요! 저희 가게 근처 식자재 공동구매 참여하실 분 계신가요? 최소 5개 점포 모이면 30% 할인 가능합니다. 주로 파스타 면류, 올리브오일, 토마토소스 등입니다. 관심 있으신 분은 댓글 달아주세요 🍝', tags:['#공동구매', '#식자재', '#마포구', '#파스타'], likes:24, comments:8, reposts:3 },
+  { type:'info', user:'성수 카페 B', region:'성동구 성수동', color:'#05c072', content:'성수동 팝업스토어 시즌 정보 공유드립니다. 3월에 대형 패션 브랜드 팝업이 3개 예정되어 있어요. 주말 유동인구 최소 20% 이상 증가 예상됩니다. 미리 재고 준비하시고 인력 배치 계획 세우세요!', tags:['#성수동', '#팝업스토어', '#유동인구', '#정보공유'], likes:67, comments:15, reposts:12 },
+  { type:'event', user:'강남 편의점 C', region:'강남구 역삼동', color:'#ff9500', content:'우리 블록 상인회에서 3월 봄맞이 이벤트 기획 중입니다. 스탬프 투어 형식으로 고객들이 여러 점포를 방문하게 하는 방식인데요, 참여 의향 있으신 분들 연락주세요. 비용은 n분의 1로 나눌 예정입니다 🌸', tags:['#상권이벤트', '#강남', '#스탬프투어', '#협업'], likes:43, comments:19, reposts:7 },
+  { type:'help', user:'종로 분식집 D', region:'종로구 인사동', color:'#f04452', content:'임대차 계약 갱신 관련해서 도움 요청드립니다. 건물주가 임대료 15% 인상을 요구하고 있는데, 상가임대차보호법상 5% 상한이 있는 걸로 알고 있는데 맞나요? 비슷한 경험 있으신 분 조언 부탁드립니다 🙏', tags:['#임대차', '#법률상담', '#도움요청', '#종로'], likes:31, comments:28, reposts:5 },
+  { type:'purchase', user:'이태원 바 E', region:'용산구 이태원동', color:'#9c27b0', content:'주류 공동구매 모집합니다! 와인, 위스키, 맥주 등 주류 도매 업체와 협상 중인데 최소 10개 업장이 모여야 합니다. 현재 6개 업장 확보, 4개 더 필요해요. 이태원/한남 지역 바, 레스토랑 운영하시는 분들 연락주세요!', tags:['#공동구매', '#주류', '#이태원', '#한남'], likes:18, comments:11, reposts:4 },
+];
+
+const storeCards = [
+  { name:'강남 파스타 레스토랑', industry:'음식점', region:'강남구 역삼동', area:'65㎡', revenue:'5,240만원', profit:'19.2%', payback:'22개월', score:84, likes:127, reposts:34, rank:1 },
+  { name:'성수 스페셜티 카페', industry:'카페/음료', region:'성동구 성수동', area:'42㎡', revenue:'3,180만원', profit:'24.8%', payback:'18개월', score:91, likes:203, reposts:67, rank:2 },
+  { name:'홍대 네일아트샵', industry:'미용/뷰티', region:'마포구 서교동', area:'28㎡', revenue:'1,920만원', profit:'31.4%', payback:'14개월', score:88, likes:89, reposts:21, rank:3 },
+  { name:'이태원 버거 전문점', industry:'음식점', region:'용산구 이태원동', area:'55㎡', revenue:'4,120만원', profit:'16.7%', payback:'28개월', score:76, likes:54, reposts:12, rank:4 },
+  { name:'종로 한식 도시락', industry:'음식점', region:'종로구 관철동', area:'38㎡', revenue:'2,840만원', profit:'22.1%', payback:'20개월', score:79, likes:71, reposts:18, rank:5 },
+  { name:'강남 프리미엄 헬스장', industry:'헬스/스포츠', region:'강남구 청담동', area:'180㎡', revenue:'6,800만원', profit:'28.4%', payback:'32개월', score:82, likes:96, reposts:29, rank:6 },
+];
+
+const recentTrades = [
+  { name:'강남구 역삼동 근린상가', price:'42억', capRate:'4.8%', date:'02.27' },
+  { name:'마포구 서교동 꼬마빌딩', price:'28억', capRate:'5.1%', date:'02.26' },
+  { name:'성동구 성수동 상가', price:'18억', capRate:'5.4%', date:'02.25' },
+  { name:'용산구 이태원동 상가', price:'15억', capRate:'5.2%', date:'02.24' },
+];
+
+// 전문가 데이터 (수정 사항 2번 반영)
+const expertsData = [
+  { type:'세무사', name:'김세무', detail:'상속/증여 및 법인 전환 전문', likes:124, icon:'💼' },
+  { type:'변호사', name:'이변호', detail:'상가 임대차 분쟁/권리금 전문', likes:98, icon:'⚖️' },
+  { type:'중개사', name:'박중개', detail:'강남/서초 지역 프리미엄 상가', likes:85, icon:'🏢' },
+  { type:'회계사', name:'최회계', detail:'소상공인 법인 기장/절세 전략', likes:72, icon:'📊' }
+];
+
+// ===== INIT =====
+let currentMonth = new Date(2026, 1, 1);
+let likedCards = new Set();
+let likedComms = new Set();
+let currentFeedTab = 'news';
+let currentNewsFilter = 'all';
+let currentCommFilter = 'all';
+
+function init() {
+  renderCalendar();
+  renderIndustryTable();
+  renderTrendChart('1m');
+  renderRecentTrades();
+  renderNews();
+  renderComm();
+  renderStoreCards();
+  renderExperts(); // 전문가 목록 렌더링 호출 (수정 사항 2번 반영)
+}
+
+// ===== NAVIGATION =====
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ===== EXPERT PANEL =====
+function renderExperts() {
+  const html = expertsData.map((e, i) => `
+    <div class="ranking-item">
+      <span class="ranking-num" style="font-size:22px;">${e.icon}</span>
+      <div class="ranking-info">
+        <div class="ranking-name">${e.name} ${e.type}</div>
+        <div class="ranking-detail">${e.detail}</div>
+      </div>
+      <button class="follow-btn" onclick="alert('${e.name} ${e.type}에게 상담을 신청합니다.')">상담</button>
+    </div>`).join('');
+  document.getElementById('expertList').innerHTML = html;
+}
+
+// ===== CALENDAR =====
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const days = ['일','월','화','수','목','금','토'];
+  let html = days.map(d => `<div class="cal-header">${d}</div>`).join('');
+  
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month+1, 0).getDate();
+  const today = new Date(2026, 1, 28);
+  
+  document.getElementById('calMonth').textContent = `${year}년 ${month+1}월`;
+  
+  const eventDates = events.map(e => e.date.getDate() + '-' + e.date.getMonth());
+  
+  for (let i = 0; i < firstDay; i++) {
+    const prevDate = new Date(year, month, -firstDay+i+1).getDate();
+    html += `<div class="cal-day other-month">${prevDate}</div>`;
+  }
+  for (let d = 1; d <= lastDate; d++) {
+    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    const hasEvent = eventDates.includes(d + '-' + month);
+    html += `<div class="cal-day ${isToday?'today':''} ${hasEvent?'has-event':''}" onclick="showDayEvents(${d})">${d}</div>`;
+  }
+  grid.innerHTML = html;
+  renderEventList();
+}
+
+function renderEventList() {
+  const today = new Date(2026, 1, 28);
+  const upcoming = events.filter(e => e.date >= today).slice(0, 4);
+  const html = upcoming.map(e => {
+    const diff = Math.round((e.date - today) / (1000*60*60*24));
+    const ddayText = diff === 0 ? 'D-Day' : `D-${diff}`;
+    const ddayClass = diff === 0 ? 'today-badge' : diff <= 7 ? 'soon' : 'normal';
+    return `<div class="event-item ${diff===0?'urgent':diff<=7?'warning':''}">
+      <span class="event-dday ${ddayClass}">${ddayText}</span>
+      <div class="event-info">
+        <div class="event-title">${e.title}</div>
+        <div class="event-date">${e.date.getMonth()+1}월 ${e.date.getDate()}일</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('eventList').innerHTML = html;
+}
+
+function changeMonth(dir) {
+  currentMonth.setMonth(currentMonth.getMonth() + dir);
+  renderCalendar();
+}
+
+function showDayEvents(day) {
+  // Changed: 빈 함수로 방치되었던 부분에 날짜 확인 알림 로직 추가
+  alert(`${currentMonth.getFullYear()}년 ${currentMonth.getMonth() + 1}월 ${day}일의 일정을 확인합니다.`);
+}
+
+// ===== INDUSTRY TABLE =====
+function renderIndustryTable() {
+  const tbody = document.getElementById('industryTableBody');
+  tbody.innerHTML = industryData.map((item, i) => {
+    const isUp = item.change.startsWith('+');
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+    const miniSvg = renderMiniChart(item.trend, item.color);
+    return `<tr>
+      <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
+      <td><strong>${item.name}</strong></td>
+      <td style="font-weight:600;">${item.avg}</td>
+      <td><span class="${isUp?'up':'down'}" style="font-weight:700;">${item.change}</span></td>
+      <td>${item.pop}</td>
+      <td>${item.cost}</td>
+      <td>${miniSvg}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMiniChart(data, color) {
+  const max = Math.max(...data), min = Math.min(...data);
+  const w = 60, h = 24;
+  const pts = data.map((v,i) => {
+    const x = (i/(data.length-1))*w;
+    const y = h - ((v-min)/(max-min||1))*(h-4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function updateIndustryData(region) { renderIndustryTable(); }
+
+// ===== TREND CHART =====
+function renderTrendChart(period) {
+  const svg = document.getElementById('trendChart');
+  const labels = document.getElementById('chartLabels');
+  const periods = { '1m':['1주','2주','3주','4주'], '3m':['12월','1월','2월'], '6m':['9월','10월','11월','12월','1월','2월'], '1y':['3월','5월','7월','9월','11월','1월'] };
+  const lbs = periods[period] || periods['1m'];
+  
+  const datasets = [
+    { color:'#3182f6', data:[70,72,75,78,80,82,85,88] },
+    { color:'#05c072', data:[65,68,72,75,78,80,82,85] },
+    { color:'#ff9500', data:[80,78,75,72,70,68,65,63] },
+    { color:'#f04452', data:[60,62,65,68,70,72,74,76] },
+  ];
+  
+  const n = lbs.length + 2;
+  let svgContent = '';
+  datasets.forEach(ds => {
+    const pts = ds.data.slice(0, n).map((v,i) => {
+      const x = (i/(n-1))*580 + 10;
+      const y = 140 - (v/100)*130;
+      return `${x},${y}`;
+    }).join(' ');
+    svgContent += `<polyline points="${pts}" fill="none" stroke="${ds.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>`;
+  });
+  svg.innerHTML = svgContent;
+  labels.innerHTML = lbs.map(l => `<span>${l}</span>`).join('');
+}
+
+function setChartPeriod(period, btn) {
+  // Changed: .card-body로 잘못 지정된 선택자를 .card-header로 변경하여 활성화 해제 오류 해결
+  document.querySelectorAll('.card-header .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrendChart(period);
+}
+
+// ===== RECENT TRADES =====
+function renderRecentTrades() {
+  const html = recentTrades.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px; font-weight:600;">${t.name}</div>
+        <div style="font-size:11px; color:var(--text-secondary);">${t.date} · Cap Rate ${t.capRate}</div>
+      </div>
+      <div style="font-size:14px; font-weight:800; color:var(--primary);">${t.price}</div>
+    </div>`).join('');
+  document.getElementById('recentTrades').innerHTML = html;
+}
+
+// ===== FEED =====
+function switchFeedTab(tab, btn) {
+  currentFeedTab = tab;
+  document.querySelectorAll('.feed-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('feed-news').style.display = tab === 'news' ? 'block' : 'none';
+  document.getElementById('feed-community').style.display = tab === 'community' ? 'block' : 'none';
+}
+
+function filterNews(cat, btn) {
+  currentNewsFilter = cat;
+  document.querySelectorAll('.news-subtab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+function renderNews() {
+  const filtered = currentNewsFilter === 'all' ? newsData : newsData.filter(n => n.cat === currentNewsFilter);
+  const catColors = { market:'cat-market', district:'cat-district', trade:'cat-trade', policy:'cat-policy' };
+  const html = filtered.map(n => `
+    <div class="news-card">
+      <span class="news-category ${catColors[n.cat]}">${n.catLabel}</span>
+      <div class="news-title">${n.title}</div>
+      <div class="news-summary">${n.summary}</div>
+      <div class="news-meta">
+        <span>🕐 ${n.time}</span>
+        <span>👁 ${n.views}명</span>
+      </div>
+    </div>`).join('');
+  document.getElementById('newsContainer').innerHTML = html;
+}
+
+function filterComm(type, btn) {
+  currentCommFilter = type;
+  document.querySelectorAll('#feed-community .news-subtab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderComm();
+}
+
+function renderComm() {
+  const filtered = currentCommFilter === 'all' ? commData : commData.filter(c => c.type === currentCommFilter);
+  const html = filtered.map((c, i) => `
+    <div class="comm-card">
+      <div class="comm-header">
+        <div class="comm-avatar" style="background:${c.color};">${c.user[0]}</div>
+        <div>
+          <div class="comm-user">${c.user}</div>
+          <div class="comm-region">📍 ${c.region}</div>
+        </div>
+      </div>
+      <div class="comm-content">${c.content}</div>
+      <div class="comm-tags">${c.tags.map(t=>`<span class="comm-tag">${t}</span>`).join('')}</div>
+      <div class="comm-actions">
+        <button class="comm-action ${likedComms.has(i)?'liked':''}" onclick="likeComm(${i}, this)">
+          ${likedComms.has(i)?'❤️':'🤍'} ${c.likes + (likedComms.has(i)?1:0)}
+        </button>
+        <button class="comm-action" onclick="alert('댓글 창을 엽니다.')">💬 ${c.comments}</button>
+        <button class="comm-action" onclick="alert('리포스트 되었습니다.')">🔁 ${c.reposts}</button>
+        <button class="comm-action" onclick="alert('공유 링크가 복사되었습니다.')">📤 공유</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('commContainer').innerHTML = html;
+}
+
+function likeComm(i, btn) {
+  if (likedComms.has(i)) likedComms.delete(i); else likedComms.add(i);
+  renderComm();
+}
+
+// index.html <script> 내부에 추가
+    function submitPost() {
+  // Changed: 작성 버튼 클릭 로직 추가
+  const input = document.getElementById('postInput');
+  if(!input.value.trim()) {
+    alert('내용을 입력해주세요.');
+    return;
+  }
+  alert('게시글이 성공적으로 등록되었습니다.');
+  input.value = '';
+}
+
+// ===== BUILDER =====
+function filterByIndustry(type, el) {
+  document.querySelectorAll('.builder-sidebar .sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  renderStoreCards(type);
+}
+
+function filterByRegion(region, el) {
+  document.querySelectorAll('.builder-sidebar .sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  renderStoreCards('all', region);
+}
+
+function renderStoreCards(industry, region) {
+  const grid = document.getElementById('storeGrid');
+  const industryMap = { food:'음식점', cafe:'카페/음료', retail:'소매/판매', beauty:'미용/뷰티', health:'헬스/스포츠', edu:'교육/학원', service:'생활서비스' };
+  const regionMap = { gangnam:'강남구', mapo:'마포구', seongdong:'성동구', jongno:'종로구', yongsan:'용산구', songpa:'송파구' };
+  
+  let filtered = [...storeCards];
+  if (industry && industry !== 'all') filtered = filtered.filter(s => s.industry === industryMap[industry]);
+  if (region) filtered = filtered.filter(s => s.region.includes(regionMap[region]));
+  
+  document.getElementById('resultCount').textContent = `총 ${filtered.length}개`;
+  
+  const html = filtered.map((s, i) => `
+    <div class="store-card">
+      <div class="store-card-header">
+        <div class="store-card-top">
+          <div class="store-name">${s.name}</div>
+          <div class="store-score">⭐ ${s.score}</div>
+        </div>
+        <div class="store-meta">
+          <span class="store-tag">🏪 ${s.industry}</span>
+          <span class="store-tag">📍 ${s.region}</span>
+          <span class="store-tag">📐 ${s.area}</span>
+        </div>
+      </div>
+      <div class="store-card-body">
+        <div class="store-metrics">
+          <div class="metric-item">
+            <div class="metric-label">예상 월매출</div>
+            <div class="metric-value up">${s.revenue}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">순이익률</div>
+            <div class="metric-value up">${s.profit}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">투자회수</div>
+            <div class="metric-value">${s.payback}</div>
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--text-secondary);">
+          이달 랭킹 <strong style="color:var(--primary);">#${s.rank}</strong> · 
+          Property Score <strong style="color:var(--primary);">${s.score}점</strong>
+        </div>
+      </div>
+      <div class="store-card-footer">
+        <div class="card-actions">
+          <button class="card-action-btn ${likedCards.has(i)?'liked':''}" onclick="likeCard(${i}, this)">
+            ${likedCards.has(i)?'❤️':'🤍'} ${s.likes + (likedCards.has(i)?1:0)}
+          </button>
+          <button class="card-action-btn" onclick="alert('${s.name}에 댓글을 작성합니다.')">💬 댓글</button>
+        </div>
+        <button class="repost-btn" onclick="repostCard(${i}, this)">🔁 리포스트</button>
+      </div>
+    </div>`).join('');
+  grid.innerHTML = html;
+}
+
+function likeCard(i, btn) {
+  if (likedCards.has(i)) likedCards.delete(i); else likedCards.add(i);
+  renderStoreCards();
+}
+
+function repostCard(i, btn) {
+  btn.textContent = '✅ 리포스트됨';
+  btn.style.background = 'var(--primary-light)';
+  btn.style.color = 'var(--primary)';
+  setTimeout(() => { btn.textContent = '🔁 리포스트'; btn.style.background=''; btn.style.color=''; }, 2000);
+}
+
+function toggleFilter(btn, label) {
+  btn.classList.toggle('active');
+}
+
+function addFilter() {
+  const filters = ['업종', '지역', '면적', '예상매출', '수익률', '권리금', '임대료', '유동인구', '공실률'];
+  const f = filters[Math.floor(Math.random()*filters.length)];
+  const bar = document.querySelector('.filter-bar');
+  const newChip = document.createElement('button');
+  newChip.className = 'filter-chip active';
+  newChip.textContent = f + ' ▾';
+  newChip.onclick = function() { this.classList.toggle('active'); };
+  bar.insertBefore(newChip, bar.querySelector('.result-count'));
+}
+
+// ===== ESTIMATOR =====
+function openEstimator() {
+  document.getElementById('estimatorOverlay').classList.add('open');
+  document.getElementById('estimateResult').style.display = 'none';
+}
+
+function closeEstimator() {
+  document.getElementById('estimatorOverlay').classList.remove('open');
+}
+
+function closeEstimatorOutside(e) {
+  if (e.target === document.getElementById('estimatorOverlay')) closeEstimator();
+}
+
+function calculateEstimate() {
+  const industry = document.getElementById('estIndustry').value;
+  const region = document.getElementById('estRegion').value;
+  const area = parseFloat(document.getElementById('estArea').value) || 50;
+  const invest = parseFloat(document.getElementById('estInvest').value) || 5000;
+  const rent = parseFloat(document.getElementById('estRent').value) || 300;
+  const premium = parseFloat(document.getElementById('estPremium').value) || 3000;
+  const staff = parseFloat(document.getElementById('estStaff').value) || 0;
+
+  const baseRevenue = { food:80, cafe:65, retail:55, beauty:45, health:70, edu:50 };
+  const regionMult = { gangnam:1.3, mapo:1.1, seongdong:1.2, jongno:0.95, yongsan:1.05, songpa:1.0 };
+  const profitRate = { food:18, cafe:25, retail:15, beauty:32, health:28, edu:35 };
+
+  const monthlyRev = Math.round(baseRevenue[industry] * area * (regionMult[region]||1) / 10) * 10;
+  const staffCost = staff * 250;
+  const baseProfitRate = profitRate[industry] || 20;
+  const staffImpact = Math.round((staffCost / monthlyRev) * 100);
+  const profit = Math.max(1, baseProfitRate - staffImpact);
+  const monthlyProfit = monthlyRev * profit / 100;
+  const totalInvest = invest + premium;
+  const payback = Math.round(totalInvest / monthlyProfit);
+  const score = Math.min(95, Math.round(60 + profit/2 + (regionMult[region]||1)*10));
+
+  document.getElementById('estRevenue').textContent = monthlyRev.toLocaleString() + '만원';
+  document.getElementById('estRevenueNote').textContent = `직원 ${staff}명 인건비(${(staffCost).toLocaleString()}만원) 반영 · 업종 평균 대비 ${Math.round((monthlyRev/4000-1)*100)}% 수준`;
+  document.getElementById('estProfitRate').textContent = profit + '%';
+  document.getElementById('estPayback').textContent = payback + '개월';
+  document.getElementById('estScore').textContent = score + '점';
+  document.getElementById('estimateResult').style.display = 'block';
+}
+
+function saveToBuilder() {
+  const name = document.getElementById('estStoreName').value.trim() || '내 상가';
+  const staff = document.getElementById('estStaff').value || 0;
+  closeEstimator();
+  alert(`✅ "${name}" (직원 ${staff}명)이 내 상가 목록에 저장되었습니다!`);
+}
+
+// ===== LOGIN =====
+function switchLoginTab(tab, btn) {
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginPhoneForm').style.display = tab === 'phone' ? 'flex' : 'none';
+  document.getElementById('loginQRForm').style.display = tab === 'qr' ? 'block' : 'none';
+}
+
+function toggleAgreeAll() {
+  const box = document.getElementById('agreeAllBox');
+  const isChecked = box.classList.contains('checked');
+  document.querySelectorAll('.checkbox').forEach(c => {
+    if (isChecked) c.classList.remove('checked');
+    else c.classList.add('checked');
+  });
+}
+
+function doLogin(){
+  const name = document.getElementById('ownerName').value;
+  const birth = document.getElementById('ownerBirth').value;
+  const phone = document.getElementById('ownerPhone').value;
+
+  if(!name || !birth || !phone){
+    alert("정보를 입력해주세요.");
+    return;
+  }
+  window.location.href = "smart_business_dashboard.html";
+}
+
+function doLogout() {
+  document.getElementById('loginPage').style.display = 'flex';
+  document.querySelector('.login-btn').textContent = '로그인';
+  document.querySelector('.login-btn').onclick = () => showPage('login', document.querySelector('.nav-btn:last-child'));
+}
+
+// ===== START =====
+init();
+
+function openSurvivalCalculator() {
+  // Changed: 새 창(_blank)으로 열리던 window.open을 현재 창 이동으로 수정
+  window.location.href = "survival_calc.html";
+}
+</script>
 </body>
 </html>

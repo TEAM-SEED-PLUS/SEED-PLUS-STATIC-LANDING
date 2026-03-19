@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEED+ MLS - 생존율 계산기</title>
+<style>
+  :root {
+    --primary: #3182f6;
+    --primary-light: #e8f3ff;
+    --primary-dark: #1b64da;
+    --red: #f04452;
+    --green: #05c072;
+    --orange: #ff9500;
+    --yellow: #ffd600;
+    --bg: #f4f6fb;
+    --white: #ffffff;
+    --border: #e5e8eb;
+    --text-primary: #191f28;
+    --text-secondary: #6b7684;
+    --text-tertiary: #b0b8c1;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(49,130,246,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text-primary); font-size:14px;
+    min-height:100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height:56px; display:flex; align-items:center;
+    justify-content:space-between; position:sticky; top:0; z-index:50;
+  }
+  .logo { font-size:18px; font-weight:900; color:var(--primary); letter-spacing:-0.5px; display:flex; align-items:center; gap:6px; }
+  .logo-sub { font-size:12px; font-weight:500; color:var(--text-secondary); margin-left:4px; }
+  .back-btn {
+    display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
+    color:var(--text-secondary); background:none; border:none; cursor:pointer;
+    padding:6px 12px; border-radius:20px; transition:all 0.15s;
+  }
+  .back-btn:hover { background:var(--bg); color:var(--primary); }
+
+  /* ── LAYOUT ── */
+  .container { max-width:960px; margin:0 auto; padding:28px 20px 60px; }
+  .page-title { font-size:24px; font-weight:900; margin-bottom:4px; }
+  .page-subtitle { font-size:14px; color:var(--text-secondary); margin-bottom:28px; line-height:1.6; }
+
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+  @media(max-width:760px){ .layout { grid-template-columns:1fr; } }
+
+  /* ── CARD ── */
+  .card {
+    background:var(--white); border-radius:var(--radius);
+    border:1px solid var(--border); overflow:hidden;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding:18px 22px 14px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .card-icon { font-size:20px; }
+  .card-title { font-size:15px; font-weight:800; }
+  .card-desc { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+  .card-body { padding:20px 22px; }
+
+  /* ── FORM ── */
+  .form-section { margin-bottom:18px; }
+  .section-label {
+    font-size:11px; font-weight:700; color:var(--text-tertiary);
+    text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-row.single { grid-template-columns:1fr; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-label {
+    font-size:12px; font-weight:600; color:var(--text-primary);
+    display:flex; align-items:center; gap:4px;
+  }
+  .form-label .badge {
+    font-size:10px; padding:1px 5px; border-radius:4px;
+    background:var(--primary-light); color:var(--primary); font-weight:700;
+  }
+  .form-label .badge.pub { background:#e8fff3; color:var(--green); }
+  .form-select, .form-input {
+    padding:10px 13px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--border); font-size:13px;
+    background:var(--white); color:var(--text-primary);
+    outline:none; transition:border-color 0.15s, box-shadow 0.15s;
+    font-family:inherit;
+  }
+  .form-select:focus, .form-input:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(49,130,246,0.10);
+  }
+  .form-hint { font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+
+  /* 창업 형태 토글 */
+  .toggle-group { display:flex; gap:0; border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+  .toggle-btn {
+    flex:1; padding:9px; text-align:center; font-size:13px; font-weight:600;
+    cursor:pointer; border:none; background:var(--white); color:var(--text-secondary);
+    transition:all 0.15s;
+  }
+  .toggle-btn.active { background:var(--primary); color:white; }
+
+  /* 공공데이터 슬라이더 */
+  .slider-group { display:flex; flex-direction:column; gap:5px; }
+  .slider-header { display:flex; justify-content:space-between; align-items:center; }
+  .slider-value {
+    font-size:13px; font-weight:700; color:var(--primary);
+    background:var(--primary-light); padding:2px 8px; border-radius:6px;
+  }
+  input[type=range] {
+    width:100%; height:6px; border-radius:3px; outline:none;
+    -webkit-appearance:none; appearance:none;
+    background: linear-gradient(to right, var(--primary) 0%, var(--primary) 50%, var(--border) 50%, var(--border) 100%);
+    cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--primary); border:2px solid white;
+    box-shadow:0 2px 6px rgba(49,130,246,0.3); cursor:pointer;
+  }
+  .slider-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--text-tertiary); }
+
+  /* ── CALC BUTTON ── */
+  .calc-btn {
+    width:100%; padding:14px; background:var(--primary); color:white;
+    border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:800;
+    cursor:pointer; margin-top:4px; transition:all 0.2s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    letter-spacing:-0.3px;
+  }
+  .calc-btn:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:0 4px 16px rgba(49,130,246,0.3); }
+  .calc-btn:active { transform:translateY(0); }
+
+  /* ── RESULT PANEL ── */
+  .result-panel { display:none; }
+  .result-panel.show { display:block; animation:fadeUp 0.3s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  /* 생존율 게이지 */
+  .gauge-card {
+    border-radius:var(--radius); padding:24px 22px; color:white;
+    margin-bottom:16px; position:relative; overflow:hidden;
+  }
+  .gauge-card::before {
+    content:''; position:absolute; top:-30px; right:-30px;
+    width:140px; height:140px; border-radius:50%;
+    background:rgba(255,255,255,0.08);
+  }
+  .gauge-card::after {
+    content:''; position:absolute; bottom:-40px; right:40px;
+    width:100px; height:100px; border-radius:50%;
+    background:rgba(255,255,255,0.06);
+  }
+  .gauge-label { font-size:12px; opacity:0.8; margin-bottom:6px; }
+  .gauge-score { font-size:52px; font-weight:900; line-height:1; margin-bottom:4px; }
+  .gauge-grade { font-size:16px; font-weight:700; opacity:0.95; margin-bottom:16px; }
+  .gauge-bar-wrap { background:rgba(255,255,255,0.2); border-radius:6px; height:8px; margin-bottom:16px; overflow:hidden; }
+  .gauge-bar-fill { height:100%; border-radius:6px; background:rgba(255,255,255,0.9); transition:width 0.8s cubic-bezier(.4,0,.2,1); }
+  .gauge-probs { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .gauge-prob { background:rgba(255,255,255,0.15); border-radius:10px; padding:12px 14px; }
+  .gauge-prob-label { font-size:11px; opacity:0.75; margin-bottom:4px; }
+  .gauge-prob-value { font-size:22px; font-weight:900; }
+  .gauge-prob-sub { font-size:10px; opacity:0.7; margin-top:2px; }
+
+  /* 점수 분해 */
+  .score-breakdown { margin-bottom:16px; }
+  .score-item {
+    display:flex; align-items:center; gap:10px; padding:10px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .score-item:last-child { border-bottom:none; }
+  .score-item-icon { font-size:16px; width:24px; text-align:center; flex-shrink:0; }
+  .score-item-info { flex:1; }
+  .score-item-name { font-size:12px; font-weight:600; }
+  .score-item-desc { font-size:11px; color:var(--text-secondary); margin-top:1px; }
+  .score-item-bar { width:80px; height:6px; background:var(--border); border-radius:3px; overflow:hidden; flex-shrink:0; }
+  .score-item-fill { height:100%; border-radius:3px; transition:width 0.6s ease; }
+  .score-item-val { font-size:13px; font-weight:800; width:36px; text-align:right; flex-shrink:0; }
+  .pos { color:var(--green); }
+  .neg { color:var(--red); }
+  .neu { color:var(--text-secondary); }
+
+  /* 위험 요인 */
+  .risk-list { display:flex; flex-direction:column; gap:8px; }
+  .risk-item {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:12px 14px; border-radius:var(--radius-sm);
+    border-left:3px solid;
+  }
+  .risk-item.high { background:#fff1f2; border-color:var(--red); }
+  .risk-item.mid  { background:#fff8ec; border-color:var(--orange); }
+  .risk-item.low  { background:#f0fff8; border-color:var(--green); }
+  .risk-rank { font-size:11px; font-weight:800; width:18px; flex-shrink:0; margin-top:1px; }
+  .risk-content { flex:1; }
+  .risk-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .risk-detail { font-size:11px; color:var(--text-secondary); line-height:1.5; }
+  .risk-impact { font-size:11px; font-weight:700; flex-shrink:0; }
+
+  /* 유사 상권 비교 */
+  .compare-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .compare-item {
+    padding:12px 10px; border-radius:var(--radius-sm); text-align:center;
+    border:1.5px solid var(--border); position:relative;
+  }
+  .compare-item.me { border-color:var(--primary); background:var(--primary-light); }
+  .compare-item.me::before {
+    content:'나'; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    background:var(--primary); color:white; font-size:10px; font-weight:800;
+    padding:1px 7px; border-radius:10px;
+  }
+  .compare-name { font-size:11px; color:var(--text-secondary); margin-bottom:4px; }
+  .compare-val { font-size:16px; font-weight:800; }
+  .compare-sub { font-size:10px; color:var(--text-tertiary); margin-top:2px; }
+
+  /* 파생변수 뱃지 */
+  .derived-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .derived-item {
+    padding:10px 12px; background:var(--bg); border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+  }
+  .derived-label { font-size:10px; color:var(--text-secondary); margin-bottom:3px; }
+  .derived-value { font-size:14px; font-weight:800; }
+  .derived-formula { font-size:10px; color:var(--text-tertiary); margin-top:2px; font-style:italic; }
+
+  /* 데이터 출처 */
+  .source-tag {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 8px; border-radius:4px; font-size:10px; font-weight:600;
+    background:#e8fff3; color:var(--green); margin:2px;
+  }
+  .disclaimer {
+    margin-top:16px; padding:12px 14px; background:var(--bg);
+    border-radius:var(--radius-sm); font-size:11px; color:var(--text-secondary);
+    line-height:1.7; border:1px solid var(--border);
+  }
+
+  /* 재계산 버튼 */
+  .reset-btn {
+    width:100%; padding:11px; background:var(--bg); border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); font-size:13px; font-weight:700;
+    color:var(--text-secondary); cursor:pointer; margin-top:10px; transition:all 0.15s;
+  }
+  .reset-btn:hover { border-color:var(--primary); color:var(--primary); }
+
+  /* 공공데이터 안내 배너 */
+  .data-banner {
+    background:linear-gradient(135deg,#e8f3ff,#f0fff8);
+    border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:12px 14px; margin-bottom:16px;
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .data-banner-icon { font-size:18px; flex-shrink:0; }
+  .data-banner-text { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+  .data-banner-text strong { color:var(--primary); }
+</style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo" style="cursor:pointer;" onclick="location.href='index.html'">
+          <img src="logo.png" alt="SEED+" style="height: 28px; width: auto; object-fit: contain;">
+          <span class="logo-sub" style="margin-left: 8px;">생존율 계산기</span>
+        </div>
+        <button class="back-btn" onclick="location.href='index.html'">← 플랫폼으로 돌아가기</button>
+      </header>
+
+<div class="container">
+  <div class="page-title">🧬 소상공인 생존율 계산기</div>
+  <div class="page-subtitle">
+    소상공인시장진흥공단 상권정보 공공데이터 기반으로 창업 전 생존 가능성을 점수화합니다.<br>
+    6개 핵심 변수를 Survival Score로 환산해 1년·3년 생존 확률 구간을 제시합니다.
+  </div>
+
+  <div class="layout">
+
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📝</span>
+          <div>
+            <div class="card-title">창업 정보 입력</div>
+            <div class="card-desc">사용자 입력 + 공공데이터 자동 반영</div>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <div class="data-banner">
+            <span class="data-banner-icon">🏛️</span>
+            <div class="data-banner-text">
+              <strong>공공데이터 자동 연동</strong> — 지역·업종 선택 시 소상공인시장진흥공단 상권정보,
+              서울시 열린데이터광장, 국토교통부 실거래가 데이터가 자동 반영됩니다.
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-label">👤 사용자 입력</div>
+            <div class="form-row" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label class="form-label">지역 선택 <span class="badge pub">공공데이터 연동</span></label>
+                <select class="form-select" id="region" onchange="onRegionChange()">
+                  <option value="">-- 지역 선택 --</option>
+                  <option value="gangnam">강남구 (역삼·논현)</option>
+                  <option value="mapo">마포구 (홍대·합정)</option>
+                  <option value="seongdong">성동구 (성수·왕십리)</option>
+                  <option value="jongno">종로구 (인사동·광화문)</option>
+                  <option value="yongsan">용산구 (이태원·한남)</option>
+                  <option value="songpa">송파구 (잠실·석촌)</option>
+                  <option value="nowon">노원구 (노원·중계)</option>
+                  <option value="dobong">도봉구 (쌍문·방학)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">업종 선택 <span class="badge pub">공공데이터 연동</span></label>
+                <select class="form-select" id="industry" onchange="onIndustryChange()">
+                  <option value="">-- 업종 선택 --</option>
+                  <option value="food">음식점 (한식·중식·일식)</option>
+                  <option value="cafe">카페·음료</option>
+                  <option value="retail">소매·판매</option>
+                  <option value="beauty">미용·뷰티</option>
+                  <option value="health">헬스·스포츠</option>
+                  <option value="edu">교육·학원</option>
+                  <option value="service">생활서비스</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label class="form-label">면적 (㎡)</label>
+                <input class="form-input" type="number" id="area" placeholder="예) 50" min="10" max="500">
+                <span class="form-hint">전용면적 기준</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">월세 (만원)</label>
+                <input class="form-input" type="number" id="rent" placeholder="예) 280" min="0">
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label class="form-label">보증금 (만원)</label>
+                <input class="form-input" type="number" id="deposit" placeholder="예) 3000" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">창업 형태</label>
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="btn-new" onclick="setType('new')">🆕 신규창업</button>
+                  <button class="toggle-btn" id="btn-transfer" onclick="setType('transfer')">🤝 양수창업</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-label">🏛️ 공공데이터 기반 변수 <span style="font-size:10px; color:var(--green); font-weight:600; text-transform:none; letter-spacing:0;">(지역·업종 선택 시 자동 반영 / 직접 조정 가능)</span></div>
+
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">📊 상권 평균 매출 수준</label>
+                  <span class="slider-value" id="val-avgSales">보통</span>
+                </div>
+                <input type="range" id="avgSales" min="1" max="5" value="3" step="1" oninput="updateSlider('avgSales', this.value)">
+                <div class="slider-labels"><span>하위</span><span>평균</span><span>상위</span></div>
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">📈 최근 매출 성장률</label>
+                  <span class="slider-value" id="val-salesGrowth">보통</span>
+                </div>
+                <input type="range" id="salesGrowth" min="1" max="5" value="3" step="1" oninput="updateSlider('salesGrowth', this.value)">
+                <div class="slider-labels"><span>감소</span><span>보합</span><span>성장</span></div>
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">🏪 동일업종 점포 밀도</label>
+                  <span class="slider-value" id="val-density">보통</span>
+                </div>
+                <input type="range" id="density" min="1" max="5" value="3" step="1" oninput="updateSlider('density', this.value)">
+                <div class="slider-labels"><span>희소</span><span>보통</span><span>과밀</span></div>
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">🏢 상권 공실률</label>
+                  <span class="slider-value" id="val-vacancy">보통</span>
+                </div>
+                <input type="range" id="vacancy" min="1" max="5" value="3" step="1" oninput="updateSlider('vacancy', this.value)">
+                <div class="slider-labels"><span>낮음</span><span>보통</span><span>높음</span></div>
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">🚶 유동인구 수준</label>
+                  <span class="slider-value" id="val-traffic">보통</span>
+                </div>
+                <input type="range" id="traffic" min="1" max="5" value="3" step="1" oninput="updateSlider('traffic', this.value)">
+                <div class="slider-labels"><span>적음</span><span>보통</span><span>많음</span></div>
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label class="form-label">🔄 휴·폐업 변동 빈도</label>
+                  <span class="slider-value" id="val-churn">보통</span>
+                </div>
+                <input type="range" id="churn" min="1" max="5" value="3" step="1" oninput="updateSlider('churn', this.value)">
+                <div class="slider-labels"><span>안정</span><span>보통</span><span>잦음</span></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="calc-btn" onclick="calculate()">
+            🧬 생존율 계산하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div id="emptyState" class="card">
+        <div class="card-body" style="text-align:center; padding:48px 24px;">
+          <div style="font-size:56px; margin-bottom:16px;">🧬</div>
+          <div style="font-size:16px; font-weight:700; margin-bottom:8px;">생존율을 계산해보세요</div>
+          <div style="font-size:13px; color:var(--text-secondary); line-height:1.7;">
+            왼쪽에서 지역·업종·임차 조건을 입력하고<br>
+            공공데이터 변수를 조정한 뒤<br>
+            <strong style="color:var(--primary);">생존율 계산하기</strong>를 눌러주세요
+          </div>
+          <div style="margin-top:20px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
+            <span class="source-tag">📊 소상공인시장진흥공단</span>
+            <span class="source-tag">🏛️ 서울시 열린데이터광장</span>
+            <span class="source-tag">🏠 국토교통부 실거래가</span>
+            <span class="source-tag">💳 카드 매출 데이터</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-panel" id="resultPanel">
+
+        <div class="gauge-card" id="gaugeCard">
+          <div class="gauge-label">Survival Score</div>
+          <div class="gauge-score" id="gaugeScore">—</div>
+          <div class="gauge-grade" id="gaugeGrade">—</div>
+          <div class="gauge-bar-wrap">
+            <div class="gauge-bar-fill" id="gaugeBarFill" style="width:0%"></div>
+          </div>
+          <div class="gauge-probs">
+            <div class="gauge-prob">
+              <div class="gauge-prob-label">1년 생존 가능성</div>
+              <div class="gauge-prob-value" id="prob1y">—</div>
+              <div class="gauge-prob-sub">추정 구간</div>
+            </div>
+            <div class="gauge-prob">
+              <div class="gauge-prob-label">3년 생존 가능성</div>
+              <div class="gauge-prob-value" id="prob3y">—</div>
+              <div class="gauge-prob-sub">추정 구간</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <span class="card-icon">📐</span>
+            <div>
+              <div class="card-title">Survival Score 분해</div>
+              <div class="card-desc">6개 변수별 점수 기여도</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="score-breakdown" id="scoreBreakdown"></div>
+
+            <div style="font-size:11px; font-weight:700; color:var(--text-tertiary); margin-bottom:8px; margin-top:4px;">📐 플랫폼 파생변수</div>
+            <div class="derived-grid" id="derivedVars"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <span class="card-icon">⚠️</span>
+            <div>
+              <div class="card-title">위험 요인 TOP 3</div>
+              <div class="card-desc">생존율에 가장 큰 영향을 미치는 요인</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="risk-list" id="riskList"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <span class="card-icon">🗺️</span>
+            <div>
+              <div class="card-title">유사 상권 대비 위치</div>
+              <div class="card-desc">동일 업종 기준 상권별 생존율 비교</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="compare-grid" id="compareGrid"></div>
+            <div style="margin-top:12px; font-size:11px; color:var(--text-secondary);">
+              📌 동일 업종·유사 면적 기준 · 소상공인시장진흥공단 상권정보 데이터 기반
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-icon">🏛️</span>
+            <div>
+              <div class="card-title">데이터 출처 및 API 연동 현황</div>
+              <div class="card-desc">본 계산기에 반영된 공공데이터</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+              <span class="source-tag">📊 소상공인시장진흥공단 상권정보</span>
+              <span class="source-tag">🏛️ 서울시 열린데이터광장</span>
+              <span class="source-tag">🏠 국토교통부 실거래가</span>
+              <span class="source-tag">💳 여신금융협회 카드 매출</span>
+              <span class="source-tag">📱 KT 유동인구 데이터</span>
+              <span class="source-tag">📋 행정안전부 인허가 데이터</span>
+            </div>
+            <div class="disclaimer">
+              ⚠️ 본 생존율은 공공데이터 기반 점수 모델로 산출된 <strong>참고용 추정치</strong>입니다.
+              실제 생존율은 운영 역량, 마케팅, 경기 변동 등 다양한 요인에 따라 달라질 수 있습니다.
+              소상공인시장진흥공단 상권분석서비스(sg.sbiz.or.kr)와 함께 활용하시길 권장합니다.
+            </div>
+          </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetCalc()">🔄 다시 계산하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 공공데이터 더미 DB (지역 × 업종) =====
+const publicData = {
+  gangnam: { avgSales:5, salesGrowth:4, density:4, vacancy:2, traffic:5, churn:2, avgSalesAmt:5240 },
+  mapo:    { avgSales:4, salesGrowth:3, density:5, vacancy:3, traffic:5, churn:3, avgSalesAmt:4120 },
+  seongdong:{ avgSales:4, salesGrowth:5, density:3, vacancy:2, traffic:4, churn:2, avgSalesAmt:3980 },
+  jongno:  { avgSales:3, salesGrowth:2, density:4, vacancy:4, traffic:4, churn:4, avgSalesAmt:3240 },
+  yongsan: { avgSales:4, salesGrowth:4, density:3, vacancy:3, traffic:4, churn:3, avgSalesAmt:3760 },
+  songpa:  { avgSales:4, salesGrowth:3, density:3, vacancy:2, traffic:4, churn:2, avgSalesAmt:3580 },
+  nowon:   { avgSales:2, salesGrowth:2, density:3, vacancy:3, traffic:3, churn:3, avgSalesAmt:2140 },
+  dobong:  { avgSales:2, salesGrowth:1, density:2, vacancy:4, traffic:2, churn:4, avgSalesAmt:1820 },
+};
+
+const industryMod = {
+  food:    { densityMod:1.2, salesMod:1.0 },
+  cafe:    { densityMod:1.4, salesMod:0.9 },
+  retail:  { densityMod:0.9, salesMod:0.85 },
+  beauty:  { densityMod:1.1, salesMod:1.1 },
+  health:  { densityMod:0.7, salesMod:1.2 },
+  edu:     { densityMod:0.8, salesMod:1.15 },
+  service: { densityMod:0.9, salesMod:0.95 },
+};
+
+const sliderLabels = {
+  avgSales:    ['하위권','하위','보통','상위','상위권'],
+  salesGrowth: ['급감소','감소','보합','성장','급성장'],
+  density:     ['희소','여유','보통','밀집','과밀'],
+  vacancy:     ['매우낮음','낮음','보통','높음','매우높음'],
+  traffic:     ['매우적음','적음','보통','많음','매우많음'],
+  churn:       ['매우안정','안정','보통','잦음','매우잦음'],
+};
+
+let startupType = 'new';
+
+// ===== 슬라이더 업데이트 =====
+function updateSlider(id, val) {
+  const labels = sliderLabels[id];
+  document.getElementById('val-' + id).textContent = labels[val - 1];
+  // 슬라이더 그라데이션 업데이트
+  const pct = ((val - 1) / 4) * 100;
+  document.getElementById(id).style.background =
+    `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--border) ${pct}%, var(--border) 100%)`;
+}
+
+// ===== 지역 변경 시 공공데이터 자동 반영 =====
+function onRegionChange() {
+  const region = document.getElementById('region').value;
+  if (!region) return;
+  const d = publicData[region];
+  if (!d) return;
+  setSlider('avgSales', d.avgSales);
+  setSlider('salesGrowth', d.salesGrowth);
+  setSlider('vacancy', d.vacancy);
+  setSlider('traffic', d.traffic);
+  setSlider('churn', d.churn);
+  onIndustryChange();
+}
+
+function onIndustryChange() {
+  const region = document.getElementById('region').value;
+  const industry = document.getElementById('industry').value;
+  if (!region || !industry) return;
+  const d = publicData[region];
+  const mod = industryMod[industry];
+  if (!d || !mod) return;
+  const densityVal = Math.min(5, Math.round(d.density * mod.densityMod));
+  setSlider('density', densityVal);
+}
+
+function setSlider(id, val) {
+  const el = document.getElementById(id);
+  el.value = val;
+  updateSlider(id, val);
+}
+
+// ===== 창업 형태 =====
+function setType(type) {
+  startupType = type;
+  document.getElementById('btn-new').classList.toggle('active', type === 'new');
+  document.getElementById('btn-transfer').classList.toggle('active', type === 'transfer');
+}
+
+// ===== 핵심 계산 =====
+function calculate() {
+  const region = document.getElementById('region').value;
+  const industry = document.getElementById('industry').value;
+  const area = parseFloat(document.getElementById('area').value) || 50;
+  const rent = parseFloat(document.getElementById('rent').value) || 0;
+  const deposit = parseFloat(document.getElementById('deposit').value) || 0;
+
+  if (!region || !industry) {
+    alert('지역과 업종을 선택해주세요.');
+    return;
+  }
+
+  const avgSales  = parseInt(document.getElementById('avgSales').value);
+  const salesGrowth = parseInt(document.getElementById('salesGrowth').value);
+  const density   = parseInt(document.getElementById('density').value);
+  const vacancy   = parseInt(document.getElementById('vacancy').value);
+  const traffic   = parseInt(document.getElementById('traffic').value);
+  const churn     = parseInt(document.getElementById('churn').value);
+
+  // ── 파생변수 계산 ──
+  const regionData = publicData[region] || {};
+  const estMonthlyRevenue = (regionData.avgSalesAmt || 3000) * (area / 50);
+  const competitionRatio  = Math.round((density / 5) * 100); // 경쟁강도 %
+  const rentBurden        = rent > 0 ? Math.round((rent / (estMonthlyRevenue / 10)) * 100) : 0; // 임차부담도 %
+  const vitalityScore     = Math.round(((salesGrowth - 1) / 4 + (traffic - 1) / 4) / 2 * 100); // 상권활력도
+  const stabilityIndex    = Math.round((1 - (vacancy - 1) / 4) * 100); // 안정성지수
+
+  // ── Survival Score 계산 ──
+  // 매출 안정성: avgSales 1→0, 5→+20
+  const s1 = Math.round(((avgSales - 1) / 4) * 20);
+  // 매출 성장성: salesGrowth 1→-10, 5→+15
+  const s2 = Math.round(((salesGrowth - 1) / 4) * 25 - 10);
+  // 경쟁 강도: density 1→+10, 5→-20
+  const s3 = Math.round(10 - ((density - 1) / 4) * 30);
+  // 공실 리스크: vacancy 1→+5, 5→-15
+  const s4 = Math.round(5 - ((vacancy - 1) / 4) * 20);
+  // 유동인구: traffic 1→0, 5→+10
+  const s5 = Math.round(((traffic - 1) / 4) * 10);
+  // 임차 부담: rentBurden 기반 (0%→+5, 50%이상→-20)
+  const s6 = rentBurden === 0 ? 0 : Math.round(5 - Math.min(25, rentBurden / 2));
+  // 휴폐업 변동: churn 1→+5, 5→-10
+  const s7 = Math.round(5 - ((churn - 1) / 4) * 15);
+  // 창업 형태 보너스: 양수 +5 (기존 고객 인수)
+  const s8 = startupType === 'transfer' ? 5 : 0;
+
+  // 기본 점수 50 + 각 변수 합산
+  let rawScore = 50 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8;
+  const totalScore = Math.max(10, Math.min(100, rawScore));
+
+  // ── 등급 및 확률 구간 ──
+  let grade, gradeColor, prob1y, prob3y, gradeBg;
+  if (totalScore >= 80) {
+    grade = '생존 가능성 높음'; gradeColor = '#05c072';
+    prob1y = '70 ~ 85%'; prob3y = '50 ~ 65%';
+    gradeBg = 'linear-gradient(135deg, #05c072 0%, #00a86b 100%)';
+  } else if (totalScore >= 60) {
+    grade = '보통'; gradeColor = '#3182f6';
+    prob1y = '55 ~ 70%'; prob3y = '35 ~ 50%';
+    gradeBg = 'linear-gradient(135deg, #3182f6 0%, #1b64da 100%)';
+  } else if (totalScore >= 40) {
+    grade = '주의 필요'; gradeColor = '#ff9500';
+    prob1y = '40 ~ 55%'; prob3y = '20 ~ 35%';
+    gradeBg = 'linear-gradient(135deg, #ff9500 0%, #e07800 100%)';
+  } else {
+    grade = '위험'; gradeColor = '#f04452';
+    prob1y = '25 ~ 40%'; prob3y = '10 ~ 25%';
+    gradeBg = 'linear-gradient(135deg, #f04452 0%, #c0392b 100%)';
+  }
+
+  // ── 점수 분해 데이터 ──
+  const breakdown = [
+    { icon:'📊', name:'매출 안정성', desc:`상권 평균 매출 ${sliderLabels.avgSales[avgSales-1]}`, score:s1, max:20, base:0 },
+    { icon:'📈', name:'상권 성장성', desc:`최근 매출 ${sliderLabels.salesGrowth[salesGrowth-1]}`, score:s2, max:15, base:-10 },
+    { icon:'🏪', name:'경쟁 강도', desc:`동일업종 밀도 ${sliderLabels.density[density-1]}`, score:s3, max:10, base:-20 },
+    { icon:'🏢', name:'공실 리스크', desc:`공실률 ${sliderLabels.vacancy[vacancy-1]}`, score:s4, max:5, base:-15 },
+    { icon:'🚶', name:'유동인구', desc:`유동인구 ${sliderLabels.traffic[traffic-1]}`, score:s5, max:10, base:0 },
+    { icon:'💰', name:'임차 부담', desc:`임차부담도 ${rentBurden}%`, score:s6, max:5, base:-20 },
+    { icon:'🔄', name:'상권 안정성', desc:`휴폐업 변동 ${sliderLabels.churn[churn-1]}`, score:s7, max:5, base:-10 },
+    { icon:'🤝', name:'창업 형태', desc:startupType==='transfer'?'양수창업 보너스':'신규창업', score:s8, max:5, base:0 },
+  ];
+
+  // ── 위험 요인 TOP 3 ──
+  const risks = [];
+  if (density >= 4) risks.push({ level:'high', title:'동일업종 과밀 경쟁', detail:`선택 상권의 ${sliderLabels.density[density-1]} 상태로, 신규 점포의 고객 확보가 어렵습니다. 차별화 전략이 필수입니다.`, impact:`-${Math.abs(s3)}점` });
+  if (rentBurden > 30) risks.push({ level:'high', title:'임차 부담 과중', detail:`월세가 예상 매출의 ${rentBurden}%로 업종 권장 기준(15~20%)을 초과합니다. 수익성 악화 위험이 높습니다.`, impact:`-${Math.abs(s6)}점` });
+  if (churn >= 4) risks.push({ level:'high', title:'높은 휴·폐업 변동률', detail:`해당 상권의 업소 변동이 잦아 상권 안정성이 낮습니다. 임차 조건 협상 시 주의가 필요합니다.`, impact:`-${Math.abs(s7)}점` });
+  if (vacancy >= 4) risks.push({ level:'mid', title:'높은 공실률', detail:`공실률이 높은 상권은 상권 활력 저하 신호일 수 있습니다. 유동인구 감소와 연계될 가능성이 있습니다.`, impact:`-${Math.abs(s4)}점` });
+  if (salesGrowth <= 2) risks.push({ level:'mid', title:'매출 성장세 둔화', detail:`최근 상권 매출이 감소 또는 정체 중입니다. 시장 진입 타이밍을 재검토하세요.`, impact:`-${Math.abs(s2 < 0 ? s2 : 0)}점` });
+  if (traffic <= 2) risks.push({ level:'low', title:'유동인구 부족', detail:`유동인구가 적어 자연 방문 고객 확보가 어렵습니다. 온라인 마케팅 및 배달 채널 강화가 필요합니다.`, impact:`+${s5}점` });
+  if (avgSales <= 2) risks.push({ level:'low', title:'낮은 상권 평균 매출', detail:`상권 전반의 매출 수준이 낮습니다. 초기 손익분기점 달성에 더 많은 시간이 소요될 수 있습니다.`, impact:`+${s1}점` });
+
+  // 점수 낮은 순 정렬 후 TOP 3
+  const topRisks = risks.slice(0, 3);
+  if (topRisks.length === 0) {
+    topRisks.push({ level:'low', title:'특별한 위험 요인 없음', detail:'현재 입력 조건 기준으로 주요 위험 요인이 감지되지 않았습니다. 운영 역량 강화에 집중하세요.', impact:'+0점' });
+  }
+
+  // ── 유사 상권 비교 ──
+  const regionNames = { gangnam:'강남구', mapo:'마포구', seongdong:'성동구', jongno:'종로구', yongsan:'용산구', songpa:'송파구', nowon:'노원구', dobong:'도봉구' };
+  const allRegions = Object.keys(publicData);
+  const compareRegions = allRegions.filter(r => r !== region).slice(0, 2);
+  const compareData = compareRegions.map(r => {
+    const d = publicData[r];
+    const simScore = Math.max(10, Math.min(100, 50 + Math.round(((d.avgSales-1)/4)*20) + Math.round(((d.salesGrowth-1)/4)*25-10) + Math.round(10-((d.density-1)/4)*30) + Math.round(5-((d.vacancy-1)/4)*20) + Math.round(((d.traffic-1)/4)*10)));
+    return { name: regionNames[r], score: simScore };
+  });
+
+  // ── 렌더링 ──
+  document.getElementById('emptyState').style.display = 'none';
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('show');
+
+  // 게이지
+  const gc = document.getElementById('gaugeCard');
+  gc.style.background = gradeBg;
+  document.getElementById('gaugeScore').textContent = totalScore + '점';
+  document.getElementById('gaugeGrade').textContent = grade;
+  document.getElementById('gaugeBarFill').style.width = totalScore + '%';
+  document.getElementById('prob1y').textContent = prob1y;
+  document.getElementById('prob3y').textContent = prob3y;
+
+  // 점수 분해
+  document.getElementById('scoreBreakdown').innerHTML = breakdown.map(b => {
+    const isPos = b.score >= 0;
+    const barPct = Math.abs(b.score) / 20 * 100;
+    const barColor = isPos ? 'var(--green)' : 'var(--red)';
+    return `<div class="score-item">
+      <span class="score-item-icon">${b.icon}</span>
+      <div class="score-item-info">
+        <div class="score-item-name">${b.name}</div>
+        <div class="score-item-desc">${b.desc}</div>
+      </div>
+      <div class="score-item-bar"><div class="score-item-fill" style="width:${barPct}%;background:${barColor};"></div></div>
+      <span class="score-item-val ${isPos?'pos':'neg'}">${isPos?'+':''}${b.score}</span>
+    </div>`;
+  }).join('');
+
+  // 파생변수
+  document.getElementById('derivedVars').innerHTML = `
+    <div class="derived-item">
+      <div class="derived-label">경쟁강도</div>
+      <div class="derived-value" style="color:${competitionRatio>60?'var(--red)':'var(--green)'}">${competitionRatio}%</div>
+      <div class="derived-formula">동일업종 점포수 / 전체 점포수</div>
+    </div>
+    <div class="derived-item">
+      <div class="derived-label">임차부담도</div>
+      <div class="derived-value" style="color:${rentBurden>30?'var(--red)':rentBurden>15?'var(--orange)':'var(--green)'}">${rentBurden}%</div>
+      <div class="derived-formula">월세 / 상권평균매출</div>
+    </div>
+    <div class="derived-item">
+      <div class="derived-label">상권활력도</div>
+      <div class="derived-value" style="color:${vitalityScore>60?'var(--green)':'var(--orange)'}">${vitalityScore}점</div>
+      <div class="derived-formula">유동인구증가율 + 매출증가율</div>
+    </div>
+    <div class="derived-item">
+      <div class="derived-label">안정성지수</div>
+      <div class="derived-value" style="color:${stabilityIndex>60?'var(--green)':'var(--red)'}">${stabilityIndex}점</div>
+      <div class="derived-formula">1 − 공실률</div>
+    </div>`;
+
+  // 위험 요인
+  document.getElementById('riskList').innerHTML = topRisks.map((r, i) => `
+    <div class="risk-item ${r.level}">
+      <span class="risk-rank">${i+1}위</span>
+      <div class="risk-content">
+        <div class="risk-title">${r.title}</div>
+        <div class="risk-detail">${r.detail}</div>
+      </div>
+      <span class="risk-impact ${r.level==='high'?'neg':r.level==='mid'?'neu':'pos'}">${r.impact}</span>
+    </div>`).join('');
+
+  // 유사 상권 비교
+  const myName = regionNames[region] || '내 상권';
+  const compareItems = [
+    { name: compareData[0]?.name || '비교 상권 A', score: compareData[0]?.score || 60, isMe: false },
+    { name: myName, score: totalScore, isMe: true },
+    { name: compareData[1]?.name || '비교 상권 B', score: compareData[1]?.score || 55, isMe: false },
+  ].sort((a, b) => b.score - a.score);
+
+  document.getElementById('compareGrid').innerHTML = compareItems.map(c => `
+    <div class="compare-item ${c.isMe ? 'me' : ''}">
+      <div class="compare-name">${c.name}</div>
+      <div class="compare-val" style="color:${c.score>=70?'var(--green)':c.score>=50?'var(--primary)':'var(--red)'}">${c.score}점</div>
+      <div class="compare-sub">${c.score>=80?'높음':c.score>=60?'보통':c.score>=40?'주의':'위험'}</div>
+    </div>`).join('');
+
+  // 스크롤
+  panel.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ===== 초기화 =====
+function resetCalc() {
+  document.getElementById('resultPanel').classList.remove('show');
+  document.getElementById('emptyState').style.display = 'block';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// ===== 초기 슬라이더 렌더링 =====
+['avgSales','salesGrowth','density','vacancy','traffic','churn'].forEach(id => {
+  updateSlider(id, document.getElementById(id).value);
+});
+</script>
+</body>
+</html>
